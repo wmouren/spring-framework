@@ -1398,15 +1398,18 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// 第四次调用 BeanPostProcessors
 		if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
 			for (InstantiationAwareBeanPostProcessor bp : getBeanPostProcessorCache().instantiationAware) {
+				// 判断是否使用 spring 的属性注入
 				if (!bp.postProcessAfterInstantiation(bw.getWrappedInstance(), beanName)) {
 					return;
 				}
 			}
 		}
 
+		// 获取使用者设置的 PropertyValues
 		PropertyValues pvs = (mbd.hasPropertyValues() ? mbd.getPropertyValues() : null);
 
 		int resolvedAutowireMode = mbd.getResolvedAutowireMode();
+		// 判断是否使用按名称或者类型进行自动注入
 		if (resolvedAutowireMode == AUTOWIRE_BY_NAME || resolvedAutowireMode == AUTOWIRE_BY_TYPE) {
 			MutablePropertyValues newPvs = new MutablePropertyValues(pvs);
 			// Add property values based on autowire by name if applicable.
@@ -1431,11 +1434,13 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			// 第五次调用 BeanPostProcessors
 			// 调用后置处理器完成注解的属性填充
 			for (InstantiationAwareBeanPostProcessor bp : getBeanPostProcessorCache().instantiationAware) {
+				// 这里进行注解注入 @Autowired @Resource @Lookup @Value  @Lazy
 				PropertyValues pvsToUse = bp.postProcessProperties(pvs, bw.getWrappedInstance(), beanName);
 				if (pvsToUse == null) {
 					if (filteredPds == null) {
 						filteredPds = filterPropertyDescriptorsForDependencyCheck(bw, mbd.allowCaching);
 					}
+					// 废弃方法 postProcessPropertyValues
 					pvsToUse = bp.postProcessPropertyValues(pvs, filteredPds, bw.getWrappedInstance(), beanName);
 					if (pvsToUse == null) {
 						return;
@@ -1444,6 +1449,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				pvs = pvsToUse;
 			}
 		}
+		// 进行依赖检查
 		if (needsDepCheck) {
 			if (filteredPds == null) {
 				filteredPds = filterPropertyDescriptorsForDependencyCheck(bw, mbd.allowCaching);
@@ -1452,6 +1458,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		if (pvs != null) {
+			// 属性值应用 用于按类型自动注入时使用 setXXX 方法调用注入
 			applyPropertyValues(beanName, mbd, bw, pvs);
 		}
 	}
@@ -1508,6 +1515,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		Set<String> autowiredBeanNames = new LinkedHashSet<>(4);
+		/**
+		 * 获取类中 PropertyDescriptor 属性（set\get 方法属性） 使用 Introspector 获取类描述信息
+		 * 排除没有 set方法、忽略检查的接口信息、和不是简单的类型 SimpleValueType（比如用户自定义的类）
+ 		 */
 		String[] propertyNames = unsatisfiedNonSimpleProperties(mbd, bw);
 		for (String propertyName : propertyNames) {
 			try {

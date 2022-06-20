@@ -35,6 +35,12 @@ import org.springframework.lang.Nullable;
  * @author Stephane Nicoll
  * @since 4.0
  */
+
+/**
+ * 可以进行分组合并导入的 ImportSelector
+ * 执行时机是 处理完所有 @Configuration bean 后运行 处理标记  @Conditional 类型
+ *
+ */
 public interface DeferredImportSelector extends ImportSelector {
 
 	/**
@@ -42,6 +48,17 @@ public interface DeferredImportSelector extends ImportSelector {
 	 * <p>The default implementations return {@code null} for no grouping required.
 	 * @return the import group class, or {@code null} if none
 	 * @since 5.0
+	 *
+	 * 使用导入组来处理
+	 * 如果多个 DeferredImportSelector 实现类返回同一个 Group 实现类
+	 * 那么这多个 DeferredImportSelector 实现类会由这一个 Group 实现类来进行处理（process）
+	 * 多个 DeferredImportSelector 实现类会循环传入 Group 实现类的 Group#process(AnnotationMetadata,DeferredImportSelector) 方法来处理
+	 *
+	 * # DeferredImportSelectorGrouping#getImports() 方法处理以上逻辑
+	 *
+	 * ConfigurationClassParser#DeferredImportSelectorHandler 处理 DeferredImportSelector 实现类
+	 *
+	 * 如果返回 null 就会使用默认分组  DefaultDeferredImportSelectorGroup
 	 */
 	@Nullable
 	default Class<? extends Group> getImportGroup() {
