@@ -122,6 +122,21 @@ abstract class ConfigurationClassUtils {
 			}
 		}
 
+		/**
+		 * Configuration bean
+		 * Configuration bean 分为两种类型：
+		 * CONFIGURATION_CLASS_FULL：
+		 * 		1、类上有 @Configuration 注解
+		 * 		2、proxyBeanMethods 属性必须是 true
+		 *
+		 * CONFIGURATION_CLASS_LITE：
+		 * 类上标记以下注解的：
+		 * 		1、 @Component、
+		 * 		2、 @ComponentScan、
+		 * 		3、	@Import、
+		 * 		4、	@ImportResource
+		 * 		5、	方法中有 @Bean
+		 */
 		Map<String, Object> config = metadata.getAnnotationAttributes(Configuration.class.getName());
 		if (config != null && !Boolean.FALSE.equals(config.get("proxyBeanMethods"))) {
 			beanDef.setAttribute(CONFIGURATION_CLASS_ATTRIBUTE, CONFIGURATION_CLASS_FULL);

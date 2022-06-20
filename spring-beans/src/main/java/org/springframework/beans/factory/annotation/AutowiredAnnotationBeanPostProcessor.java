@@ -293,6 +293,8 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 		}
 
 		// Quick check on the concurrent map first, with minimal locking.
+		// 重复的 beanClass 类就不需要重复解析了，
+		// 比如 Dubbo 的 serviceBean.class 代理类都是同一个 BeanClass 所以就可以不用重复解析
 		Constructor<?>[] candidateConstructors = this.candidateConstructorsCache.get(beanClass);
 		if (candidateConstructors == null) {
 			// Fully synchronized resolution now...
@@ -627,6 +629,7 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 		protected void inject(Object bean, @Nullable String beanName, @Nullable PropertyValues pvs) throws Throwable {
 			Field field = (Field) this.member;
 			Object value;
+			//作用域 ConfigurableBeanFactory.SCOPE_PROTOTYPE 这里的 cached 会设置成 true 从缓存中哪
 			if (this.cached) {
 				try {
 					value = resolvedCachedArgument(beanName, this.cachedFieldValue);
@@ -707,6 +710,8 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 			}
 			Method method = (Method) this.member;
 			Object[] arguments;
+
+			//作用域 ConfigurableBeanFactory.SCOPE_PROTOTYPE 这里的 cached 会设置成 true 从缓存中哪
 			if (this.cached) {
 				try {
 					arguments = resolveCachedArguments(beanName);

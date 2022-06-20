@@ -163,6 +163,10 @@ public class InjectionMetadata {
 
 	/**
 	 * A single injected element.
+	 * 有不同的策略实现
+	 * AutowiredMethodElement、AutowiredFieldElement
+	 * ResourceElement、LookupElement
+	 * PersistenceElement、WebServiceRefElement、EjbRefElement
 	 */
 	public abstract static class InjectedElement {
 

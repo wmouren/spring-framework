@@ -33,7 +33,7 @@ import org.springframework.core.metrics.StartupStep;
  */
 class FlightRecorderStartupStep implements StartupStep {
 
-	private final FlightRecorderStartupEvent event;
+//	private final FlightRecorderStartupEvent event;
 
 	private final FlightRecorderTags tags = new FlightRecorderTags();
 
@@ -43,25 +43,28 @@ class FlightRecorderStartupStep implements StartupStep {
 	public FlightRecorderStartupStep(long id, String name, long parentId,
 			Consumer<FlightRecorderStartupStep> recordingCallback) {
 
-		this.event = new FlightRecorderStartupEvent(id, name, parentId);
-		this.event.begin();
+//		this.event = new FlightRecorderStartupEvent(id, name, parentId);
+//		this.event.begin();
 		this.recordingCallback = recordingCallback;
 	}
 
 
 	@Override
 	public String getName() {
-		return this.event.name;
+//		return this.event.name;
+		return "";
 	}
 
 	@Override
 	public long getId() {
-		return this.event.eventId;
+//		return this.event.eventId;
+		return 0L;
 	}
 
 	@Override
 	public Long getParentId() {
-		return this.event.parentId;
+//		return this.event.parentId;
+		return 0L;
 	}
 
 	@Override
@@ -83,20 +86,21 @@ class FlightRecorderStartupStep implements StartupStep {
 
 	@Override
 	public void end() {
-		this.event.end();
-		if (this.event.shouldCommit()) {
-			StringBuilder builder = new StringBuilder();
-			this.tags.forEach(tag ->
-					builder.append(tag.getKey()).append('=').append(tag.getValue()).append(',')
-			);
-			this.event.setTags(builder.toString());
-		}
-		this.event.commit();
-		this.recordingCallback.accept(this);
+//		this.event.end();
+//		if (this.event.shouldCommit()) {
+//			StringBuilder builder = new StringBuilder();
+//			this.tags.forEach(tag ->
+//					builder.append(tag.getKey()).append('=').append(tag.getValue()).append(',')
+//			);
+//			this.event.setTags(builder.toString());
+//		}
+//		this.event.commit();
+//		this.recordingCallback.accept(this);
 	}
 
 	protected FlightRecorderStartupEvent getEvent() {
-		return this.event;
+//		return this.event;
+		return null;
 	}
 
 

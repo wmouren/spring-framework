@@ -165,6 +165,12 @@ public class ResourceHandlerRegistry {
 			return null;
 		}
 
+
+		/**
+		 * 将静态资源解析成一个 实现 HttpRequestHandler 接口的 handler，pathPatten 是设置的资源路径
+		 *
+		 * 返回一个 HandlerMapping 实现类 SimpleUrlHandlerMapping
+		 */
 		Map<String, HttpRequestHandler> urlMap = new LinkedHashMap<>();
 		for (ResourceHandlerRegistration registration : this.registrations) {
 			for (String pathPattern : registration.getPathPatterns()) {

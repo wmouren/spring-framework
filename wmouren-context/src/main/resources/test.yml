@@ -1,0 +1,19 @@
+person: &p
+  name: "zhangsan"
+  age: 12
+subPerson:
+  <<: *p
+
+
+
+
+name:
+  ? - Detroit Tigers
+    - Chicago cubs
+  :
+    - !!str 2001-07-23
+  ? [ New York Yankees,
+      Atlanta Braves ]
+  : [ !!str 2001-07-02, !!str 2001-08-12,
+      !!str 2001-08-14 ]
+

@@ -541,6 +541,17 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		return this.applicationListeners;
 	}
 
+	/**
+	 * AbstractApplicationContext 抽象类中模板方法 定义了启动容器流程步骤
+	 * 1、初始化 bean 工厂上下文
+	 * 2、实例化并执行 bean 工厂处理器
+	 * 	- BeanDefinitionRegistryPostProcessor#postProcessBeanDefinitionRegistry  扫描解析注册所有的 BeanDefinition
+	 * 	- BeanFactoryPostProcessor#postProcessBeanFactory 对 bean 工厂中的 BeanDefinition 做一些别的处理，也可以添加一些需要的 BeanDefinition
+	 * 3、查找所有实现 BeanPostProcessors 的类，实例化并加入到 bean 工厂中
+	 * 4、
+	 * @throws BeansException
+	 * @throws IllegalStateException
+	 */
 	@Override
 	public void refresh() throws BeansException, IllegalStateException {
 		synchronized (this.startupShutdownMonitor) {

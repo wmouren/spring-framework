@@ -279,11 +279,26 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 
 		for (String beanName : candidateNames) {
 			BeanDefinition beanDef = registry.getBeanDefinition(beanName);
+			// 判断当前bd是否是已经处理过得配置类，处理过的类 bd 属性中会设置 ConfigurationClassUtils.CONFIGURATION_CLASS_ATTRIBUTE 这个属性
 			if (beanDef.getAttribute(ConfigurationClassUtils.CONFIGURATION_CLASS_ATTRIBUTE) != null) {
 				if (logger.isDebugEnabled()) {
 					logger.debug("Bean definition has already been processed as a configuration class: " + beanDef);
 				}
 			}
+			/**
+			 * 判断是否为配置候选 bean  如果是候选类则加入到 configCandidates 集合中进行下一步得解析
+			 * 配置类分为两种类型：
+			 * CONFIGURATION_CLASS_FULL：
+			 * 		1、类上有 @Configuration 注解
+			 * 		2、proxyBeanMethods 属性必须是 true
+			 * CONFIGURATION_CLASS_LITE：
+			 * 类上标记以下注解的：
+			 * 		1、 @Component、
+			 * 		2、 @ComponentScan、
+			 * 		3、	@Import、
+			 * 		4、	@ImportResource
+			 * 		5、	方法中有 @Bean
+			 */
 			else if (ConfigurationClassUtils.checkConfigurationClassCandidate(beanDef, this.metadataReaderFactory)) {
 				configCandidates.add(new BeanDefinitionHolder(beanDef, beanName));
 			}
@@ -295,6 +310,9 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 		}
 
 		// Sort by previously determined @Order value, if applicable
+		/**
+		 * 通过 Order 进行排序
+		 */
 		configCandidates.sort((bd1, bd2) -> {
 			int i1 = ConfigurationClassUtils.getOrder(bd1.getBeanDefinition());
 			int i2 = ConfigurationClassUtils.getOrder(bd2.getBeanDefinition());
@@ -320,6 +338,23 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 		}
 
 		// Parse each @Configuration class
+		/**
+		 *  ConfigurationClassParser 解析所有配置类 将符合条件的配置类转换成 ConfigurationClass 放入 configurationClasses 容器中
+		 *  1、内部类标记有 @Component 加入
+		 *  2、@PropertySources 和 @PropertySource 注解，解析读取配置资源 加入到 ConfigurableEnvironment 配置变量中
+		 *  3、@ComponentScans 和 @ComponentScan 注解，查询所有扫描的类，检查扫面出来的类有没有符合条件的配置类
+		 *  4、解析处理 @Import 导入的配置类  处理 ImportSelector 、ImportBeanDefinitionRegistrar 接口实现导入的配置类
+		 *  5、解析 @ImportResource 存储 ConfigurationClass 属性中 importedResources
+		 *  6、解析 @Bean 方法  存储 ConfigurationClass 属性中 beanMethods
+		 *  7、处理接口默认方法 default 方法
+		 *  5、处理父类的 按以上顺序递归处理
+		 *
+		 *  解析出符合条件的所有配置 bean 封装成 ConfigurationClass 类
+		 *
+		 *  使用以下方式导入的配置类可以解析生效：
+		 *   @ComponentScan、 @Import 、@ImportResource
+		 *   不在扫描包路径下的 可以使用 @Import 或者 @ImportResource ，mybatis 使用的就是 @Import 导入
+		 */
 		ConfigurationClassParser parser = new ConfigurationClassParser(
 				this.metadataReaderFactory, this.problemReporter, this.environment,
 				this.resourceLoader, this.componentScanBeanNameGenerator, registry);
@@ -340,6 +375,9 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 						registry, this.sourceExtractor, this.resourceLoader, this.environment,
 						this.importBeanNameGenerator, parser.getImportRegistry());
 			}
+			/**
+			 * 读取所有已解析的配置类 注册到 容器中
+			 */
 			this.reader.loadBeanDefinitions(configClasses);
 			alreadyParsed.addAll(configClasses);
 			processConfig.tag("classCount", () -> String.valueOf(configClasses.size())).end();
@@ -444,6 +482,9 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 			beanDef.setAttribute(AutoProxyUtils.PRESERVE_TARGET_CLASS_ATTRIBUTE, Boolean.TRUE);
 			// Set enhanced subclass of the user-specified bean class
 			Class<?> configClass = beanDef.getBeanClass();
+			/**
+			 * 增强配置类
+			 */
 			Class<?> enhancedClass = enhancer.enhance(configClass, this.beanClassLoader);
 			if (configClass != enhancedClass) {
 				if (logger.isTraceEnabled()) {

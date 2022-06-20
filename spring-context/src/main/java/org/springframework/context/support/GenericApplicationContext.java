@@ -51,7 +51,7 @@ import org.springframework.util.Assert;
  * {@link org.springframework.beans.factory.support.BeanDefinitionRegistry}
  * interface and then call {@link #refresh()} to initialize those beans
  * with application context semantics (handling
- * {@link org.springframework.context.ApplicationContextAware}, auto-detecting
+ * {@link org.springframework.context.Application`ContextAware}, auto-detecting
  * {@link org.springframework.beans.factory.config.BeanFactoryPostProcessor BeanFactoryPostProcessors},
  * etc).
  *

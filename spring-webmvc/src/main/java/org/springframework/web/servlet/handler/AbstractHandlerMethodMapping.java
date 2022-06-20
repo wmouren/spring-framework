@@ -209,6 +209,9 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 	 */
 	@Override
 	public void afterPropertiesSet() {
+		/**
+		 * 初始化解析 @Controller 里标有 @Mapping 的方法
+		 */
 		initHandlerMethods();
 	}
 
@@ -221,6 +224,9 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 	protected void initHandlerMethods() {
 		for (String beanName : getCandidateBeanNames()) {
 			if (!beanName.startsWith(SCOPED_TARGET_NAME_PREFIX)) {
+				/**
+				 * 解析出的 handlerMethods 注册到 mappingRegistry 中
+				 */
 				processCandidateBean(beanName);
 			}
 		}
@@ -638,6 +644,9 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 					addMappingName(name, handlerMethod);
 				}
 
+				/**
+				 * 初始化 Cors 参数
+				 */
 				CorsConfiguration corsConfig = initCorsConfiguration(handler, method, mapping);
 				if (corsConfig != null) {
 					corsConfig.validateAllowCredentials();

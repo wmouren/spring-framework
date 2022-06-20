@@ -59,6 +59,10 @@ import org.springframework.beans.BeansException;
  * @see BeanPostProcessor
  * @see PropertyResourceConfigurer
  */
+
+/**
+ * BeanFactoryPostProcessor#postProcessBeanFactory 阶段注册配置类 配置类不再生效
+ */
 @FunctionalInterface
 public interface BeanFactoryPostProcessor {
 
