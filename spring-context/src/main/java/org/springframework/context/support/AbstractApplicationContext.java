@@ -484,6 +484,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * @see org.springframework.core.io.support.PathMatchingResourcePatternResolver
 	 */
 	protected ResourcePatternResolver getResourcePatternResolver() {
+		// 初始化一个路径资源解析器 来解析路径文件资源  支持 Ant-style
 		return new PathMatchingResourcePatternResolver(this);
 	}
 
@@ -554,24 +555,67 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 */
 	@Override
 	public void refresh() throws BeansException, IllegalStateException {
+		/**
+		 * 抽象的 ApplicationContext 一个模板方法， 定义了 容器的启动流程
+		 */
 		synchronized (this.startupShutdownMonitor) {
 			StartupStep contextRefresh = this.applicationStartup.start("spring.context.refresh");
 
 			// Prepare this context for refreshing.
+			/**
+			 * 初始化启动标识
+			 * 初始化属性源 由子类实现
+			 */
 			prepareRefresh();
 
 			// Tell the subclass to refresh the internal bean factory.
+			/**
+			 * 初始化 beanFactory 容器，
+			 * 由子类创建并提供 ConfigurableListableBeanFactory
+			 * AbstractRefreshableWebApplicationContext
+			 * GenericApplicationContext
+			 *
+			 *
+			 * 类比：工厂（BeanFactory）制造基础商品面向商品  -》公司（ApplicationContext） 包装营销提供优质售后售前服务面向客户
+			 *
+			 * BeanFactory 容器内部应用是管理 BeanDefinition 和实例化 bean 的一系列处理
+			 *
+			 * ApplicationContext 基于 BeanFactory 的功能，扩展一些高级功能面向用户应用
+			 *
+			 */
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
 			// Prepare the bean factory for use in this context.
+			/**
+			 * 注册 ignoreDependencyInterface 的接口
+			 * 注册 BeanDefinition
+			 * 注册 BeanPostProcessors
+			 * 设置 classLoader
+			 */
 			prepareBeanFactory(beanFactory);
 
 			try {
+				// 子类对 beanFactory 做一些处理
+				/**
+				 * 比如注册一些 beanPostProcess 和 ignoreDependencyInterface
+				 */
 				// Allows post-processing of the bean factory in context subclasses.
 				postProcessBeanFactory(beanFactory);
 
+				/**
+				 * 运行耗时时间计算
+				 */
 				StartupStep beanPostProcess = this.applicationStartup.start("spring.context.beans.post-process");
 				// Invoke factory processors registered as beans in the context.
+				/**
+				 * 执行以下接口的所有实现类
+				 * BeanDefinitionRegistryPostProcessor 先执行，对各种配置类的扫描解析并注册 BeanDefinition
+				 * BeanFactoryPostProcessor 可以对已经注册的 BeanDefinition 做修改
+				 *
+				 *
+				 * 最重要的实现 ：ConfigurationClassPostProcessor
+				 *
+				 */
 				invokeBeanFactoryPostProcessors(beanFactory);
 
 				// Register bean processors that intercept bean creation.
@@ -692,11 +736,22 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		// Tell the internal bean factory to use the context's class loader etc.
 		beanFactory.setBeanClassLoader(getClassLoader());
 		if (!shouldIgnoreSpel) {
+			/**
+			 * 设置 spel 解析器 可以使用 spring.spel.ignore 来关闭 spel 解析器
+			 */
 			beanFactory.setBeanExpressionResolver(new StandardBeanExpressionResolver(beanFactory.getBeanClassLoader()));
 		}
+		/**
+		 * 添加资源编辑器、和资源读取
+		 */
 		beanFactory.addPropertyEditorRegistrar(new ResourceEditorRegistrar(this, getEnvironment()));
 
 		// Configure the bean factory with context callbacks.
+		/**
+		 * 添加一个 ApplicationContextAwareProcessor 后置处理器，由容器来调用一系列 *Aware 接口类
+		 *
+		 * 设置 ignoreDependencyInterface 接口，由后置处理器处理。依赖注入时忽略这些接口
+		 */
 		beanFactory.addBeanPostProcessor(new ApplicationContextAwareProcessor(this));
 		beanFactory.ignoreDependencyInterface(EnvironmentAware.class);
 		beanFactory.ignoreDependencyInterface(EmbeddedValueResolverAware.class);
@@ -708,10 +763,21 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 		// BeanFactory interface not registered as resolvable type in a plain factory.
 		// MessageSource registered (and found for autowiring) as a bean.
+		/**
+		 * 如果代码中依赖注入以下类型的类，直接从 ResolvableDependency 中解析并注入
+		 *
+		 * DefaultListableBeanFactory#findAutowireCandidates() 中实现了
+		 */
 		beanFactory.registerResolvableDependency(BeanFactory.class, beanFactory);
 		beanFactory.registerResolvableDependency(ResourceLoader.class, this);
 		beanFactory.registerResolvableDependency(ApplicationEventPublisher.class, this);
 		beanFactory.registerResolvableDependency(ApplicationContext.class, this);
+		/**
+		 * 测试 ResolvableDependency
+		 * @See com.wmouren.service.A
+		 * @See org.springframework.context.support.TestResolvableDependency
+		 */
+		beanFactory.registerResolvableDependency(TestResolvableDependency.class, new TestResolvableDependency());
 
 		// Register early post-processor for detecting inner beans as ApplicationListeners.
 		beanFactory.addBeanPostProcessor(new ApplicationListenerDetector(this));
@@ -724,6 +790,9 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		}
 
 		// Register default environment beans.
+		/**
+		 * 注册一些默认的环境变量 bean
+		 */
 		if (!beanFactory.containsLocalBean(ENVIRONMENT_BEAN_NAME)) {
 			beanFactory.registerSingleton(ENVIRONMENT_BEAN_NAME, getEnvironment());
 		}

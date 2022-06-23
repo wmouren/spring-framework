@@ -173,7 +173,13 @@ import javax.servlet.ServletException;
  * @see org.springframework.web.context.AbstractContextLoaderInitializer
  * @see org.springframework.web.servlet.support.AbstractDispatcherServletInitializer
  * @see org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer
+ *
+ * 外部 servlet 容器才会使用 SPI 调用
+ * 内嵌的 Servlet 容器不会调用此接口实现类，内嵌调用 ServletContextInitializer 的实现
+ * 内嵌实现 TomcatServletWebServerFactory  利用 spring 容器初始化 onRefresh 扩展获取 webServer
  */
+
+
 public interface WebApplicationInitializer {
 
 	/**

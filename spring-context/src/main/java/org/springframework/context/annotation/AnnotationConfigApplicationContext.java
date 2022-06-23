@@ -66,8 +66,13 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 */
 	public AnnotationConfigApplicationContext() {
 		StartupStep createAnnotatedBeanDefReader = this.getApplicationStartup().start("spring.context.annotated-bean-reader.create");
+		// AnnotatedBeanDefinitionReader 往容器中初始化一些内置的 bean
+		// 用于注册配置启动类的 BeanDefinition 类型是 AnnotatedGenericBeanDefinition
 		this.reader = new AnnotatedBeanDefinitionReader(this);
 		createAnnotatedBeanDefReader.end();
+		// 扫描指定包路径里标注有@Component 注解的类，将其注册为 BeanDefinition， 类型是 ScannedGenericBeanDefinition
+		// 这里可以作为一个扩展点 用来扫描自己扩展的自定义类 按照自己逻辑来注册为一个 BeanDefinition 到容器中
+		// 案例有：mybatis、dubbo
 		this.scanner = new ClassPathBeanDefinitionScanner(this);
 	}
 
@@ -90,6 +95,7 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	public AnnotationConfigApplicationContext(Class<?>... componentClasses) {
 		this();
 		register(componentClasses);
+		// 开始初始化 Spring 容器
 		refresh();
 	}
 

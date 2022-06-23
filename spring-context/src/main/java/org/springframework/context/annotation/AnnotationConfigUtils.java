@@ -145,6 +145,18 @@ public abstract class AnnotationConfigUtils {
 	 * @return a Set of BeanDefinitionHolders, containing all bean definitions
 	 * that have actually been registered by this call
 	 */
+	/**
+	 *
+	 *
+	 * 在给定的注册表中 注册一些内置的后置处理器
+	 * 1、ConfigurationClassPostProcessor
+	 * 2、AutowiredAnnotationBeanPostProcessor
+	 * 3、CommonAnnotationBeanPostProcessor
+	 * 4、EventListenerMethodProcessor
+	 * 5、DefaultEventListenerFactory
+	 * 6、PersistenceAnnotationBeanPostProcessor
+	 *
+	 */
 	public static Set<BeanDefinitionHolder> registerAnnotationConfigProcessors(
 			BeanDefinitionRegistry registry, @Nullable Object source) {
 

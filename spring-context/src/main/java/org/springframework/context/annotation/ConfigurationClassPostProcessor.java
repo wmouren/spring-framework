@@ -343,7 +343,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 		 *  1、内部类标记有 @Component 加入
 		 *  2、@PropertySources 和 @PropertySource 注解，解析读取配置资源 加入到 ConfigurableEnvironment 配置变量中
 		 *  3、@ComponentScans 和 @ComponentScan 注解，查询所有扫描的类，检查扫面出来的类有没有符合条件的配置类
-		 *  4、解析处理 @Import 导入的配置类  处理 ImportSelector 、ImportBeanDefinitionRegistrar 接口实现导入的配置类
+		 *  4、解析处理 @Import 导入的配置类  处理 ImportSelector 、ImportBeanDefinitionRegistrar、DeferredImportSelector 接口实现导入的配置类
 		 *  5、解析 @ImportResource 存储 ConfigurationClass 属性中 importedResources
 		 *  6、解析 @Bean 方法  存储 ConfigurationClass 属性中 beanMethods
 		 *  7、处理接口默认方法 default 方法
