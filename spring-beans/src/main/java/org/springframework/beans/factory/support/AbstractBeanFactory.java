@@ -157,9 +157,18 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	private final List<StringValueResolver> embeddedValueResolvers = new CopyOnWriteArrayList<>();
 
 	/** BeanPostProcessors to apply. */
+	/**
+	 * 保存注册的 BeanPostProcessor，
+	 * 使用的是 CopyOnWriteArrayList，用于在修改时重置 beanPostProcessorCache 字段。
+	 */
 	private final List<BeanPostProcessor> beanPostProcessors = new BeanPostProcessorCacheAwareList();
 
 	/** Cache of pre-filtered post-processors. */
+	/**
+	 * 用来按类型缓存 BeanPostProcessor 的缓存对象
+	 * InstantiationAwareBeanPostProcessor、DestructionAwareBeanPostProcessor
+	 * SmartInstantiationAwareBeanPostProcessor、MergedBeanDefinitionPostProcessor
+	 */
 	@Nullable
 	private volatile BeanPostProcessorCache beanPostProcessorCache;
 
@@ -171,6 +180,10 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	private SecurityContextProvider securityContextProvider;
 
 	/** Map from bean name to merged RootBeanDefinition. */
+	/**
+	 *
+	 * key为 beanName，value 合并过的 RootBeanDefinition
+	 */
 	private final Map<String, RootBeanDefinition> mergedBeanDefinitions = new ConcurrentHashMap<>(256);
 
 	/** Names of beans that have already been created at least once. */

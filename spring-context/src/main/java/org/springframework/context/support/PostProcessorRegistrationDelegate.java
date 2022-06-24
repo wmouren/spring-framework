@@ -96,6 +96,12 @@ final class PostProcessorRegistrationDelegate {
 			// uninitialized to let the bean factory post-processors apply to them!
 			// Separate between BeanDefinitionRegistryPostProcessors that implement
 			// PriorityOrdered, Ordered, and the rest.
+
+			/**
+			 * 先执行实现了PriorityOrdered接口的BeanDefinitionRegistryPostProcessor
+			 * 然后执行实现了Ordered接口的BeanDefinitionRegistryPostProcessor
+			 * 最后执行其他的BeanDefinitionRegistryPostProcessor
+			 */
 			List<BeanDefinitionRegistryPostProcessor> currentRegistryProcessors = new ArrayList<>();
 
 			// First, invoke the BeanDefinitionRegistryPostProcessors that implement PriorityOrdered.
@@ -144,6 +150,9 @@ final class PostProcessorRegistrationDelegate {
 			}
 
 			// Now, invoke the postProcessBeanFactory callback of all processors handled so far.
+			/**
+			 * 处理完所有得 BeanDefinitionRegistryPostProcessor 后，然后执行 BeanFactoryPostProcessors 的 postProcessBeanFactory 方法
+			 */
 			invokeBeanFactoryPostProcessors(registryProcessors, beanFactory);
 			invokeBeanFactoryPostProcessors(regularPostProcessors, beanFactory);
 		}
@@ -153,6 +162,9 @@ final class PostProcessorRegistrationDelegate {
 			invokeBeanFactoryPostProcessors(beanFactoryPostProcessors, beanFactory);
 		}
 
+		/**
+		 * 执行所有的 BeanFactoryPostProcessors,先执行实现 PriorityOrdered 然后执行实现 Ordered 然后执行其他的 BeanFactoryPostProcessors
+		 */
 		// Do not initialize FactoryBeans here: We need to leave all regular beans
 		// uninitialized to let the bean factory post-processors apply to them!
 		String[] postProcessorNames =

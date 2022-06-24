@@ -244,6 +244,10 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 		}
 		this.registriesPostProcessed.add(registryId);
 
+		/**
+		 * 扫描解析保存各种类型的配置 bean 定义
+		 *
+		 */
 		processConfigBeanDefinitions(registry);
 	}
 
@@ -265,6 +269,9 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 			processConfigBeanDefinitions((BeanDefinitionRegistry) beanFactory);
 		}
 
+		/**
+		 * CGLIB-enhanced  增强代理配置类
+		 */
 		enhanceConfigurationClasses(beanFactory);
 		beanFactory.addBeanPostProcessor(new ImportAwareBeanPostProcessor(beanFactory));
 	}
@@ -275,6 +282,9 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 	 */
 	public void processConfigBeanDefinitions(BeanDefinitionRegistry registry) {
 		List<BeanDefinitionHolder> configCandidates = new ArrayList<>();
+		/**
+		 * 获取容器中所有的 beanDefinition 名称
+		 */
 		String[] candidateNames = registry.getBeanDefinitionNames();
 
 		for (String beanName : candidateNames) {
@@ -339,7 +349,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 
 		// Parse each @Configuration class
 		/**
-		 *  ConfigurationClassParser 解析所有配置类 将符合条件的配置类转换成 ConfigurationClass 放入 configurationClasses 容器中
+		 *  ConfigurationClassParser 解析所有符合规则的配置类，将符合条件的配置类信息封装成 ConfigurationClass 放入 configurationClasses 容器中
 		 *  1、内部类标记有 @Component 加入
 		 *  2、@PropertySources 和 @PropertySource 注解，解析读取配置资源 加入到 ConfigurableEnvironment 配置变量中
 		 *  3、@ComponentScans 和 @ComponentScan 注解，查询所有扫描的类，检查扫面出来的类有没有符合条件的配置类
@@ -361,6 +371,12 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 
 		Set<BeanDefinitionHolder> candidates = new LinkedHashSet<>(configCandidates);
 		Set<ConfigurationClass> alreadyParsed = new HashSet<>(configCandidates.size());
+		/**
+		 * do will 循环解析所有的配置类
+		 * 在解析过程中还会有新的配置类被解析出来，这时候会将新的配置类放入 candidates 容器中
+		 * 当 candidates 容器中的配置类解析完成后，会将已经解析完成的配置类放入 alreadyParsed 容器中
+		 *
+		 */
 		do {
 			StartupStep processConfig = this.applicationStartup.start("spring.context.config-classes.parse");
 			parser.parse(candidates);
