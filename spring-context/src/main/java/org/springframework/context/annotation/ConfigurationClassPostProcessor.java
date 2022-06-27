@@ -273,6 +273,9 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 		 * CGLIB-enhanced  增强代理配置类
 		 */
 		enhanceConfigurationClasses(beanFactory);
+		/**
+		 * 用来给被代理的配置类设置 beanFactory 属性和处理 ImportAware 接口
+		 */
 		beanFactory.addBeanPostProcessor(new ImportAwareBeanPostProcessor(beanFactory));
 	}
 
@@ -369,13 +372,25 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 				this.metadataReaderFactory, this.problemReporter, this.environment,
 				this.resourceLoader, this.componentScanBeanNameGenerator, registry);
 
+		/**
+		 * 一般情况下第一次 candidates 里只有直接注册的启动配置类 AnnotatedGenericBeanDefinition
+		 * 例如：
+		 * AnnotationConfigApplicationContext context =
+		 * 				new AnnotationConfigApplicationContext();
+		 * context.register(App.class);
+		 */
 		Set<BeanDefinitionHolder> candidates = new LinkedHashSet<>(configCandidates);
+		/**
+		 * 已经解析过的配置类放到这个集合
+		 */
 		Set<ConfigurationClass> alreadyParsed = new HashSet<>(configCandidates.size());
 		/**
 		 * do will 循环解析所有的配置类
 		 * 在解析过程中还会有新的配置类被解析出来，这时候会将新的配置类放入 candidates 容器中
 		 * 当 candidates 容器中的配置类解析完成后，会将已经解析完成的配置类放入 alreadyParsed 容器中
 		 *
+		 * 解析（ConfigurationClassParser）和注册（ConfigurationClassBeanDefinitionReader）两个功能分开设计
+		 * 单一职责
 		 */
 		do {
 			StartupStep processConfig = this.applicationStartup.start("spring.context.config-classes.parse");
@@ -399,6 +414,11 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 			processConfig.tag("classCount", () -> String.valueOf(configClasses.size())).end();
 
 			candidates.clear();
+			/**
+			 * 判断当前容器中的 BeanDefinition 数量是否大于上一次解析获取的 BeanDefinition 数量
+			 * 如果大于说明有新的 BeanDefinition 注册了，在判断新注册的 BeanDefinition 是否是配置类
+			 * 如果是配置类则加入 candidates 继续循环解析，直到再没有新的配置类则结束。
+			 */
 			if (registry.getBeanDefinitionCount() > candidateNames.length) {
 				String[] newCandidateNames = registry.getBeanDefinitionNames();
 				Set<String> oldCandidateNames = new HashSet<>(Arrays.asList(candidateNames));
@@ -437,6 +457,10 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 	 * any candidates are then enhanced by a {@link ConfigurationClassEnhancer}.
 	 * Candidate status is determined by BeanDefinition attribute metadata.
 	 * @see ConfigurationClassEnhancer
+	 */
+	/**
+	 * 使用 CGLIB 来增强配置类，防止方法互相调用而重复创建单例 bean，如果已经创建直接从容器取，没有再创建
+	 * @param beanFactory
 	 */
 	public void enhanceConfigurationClasses(ConfigurableListableBeanFactory beanFactory) {
 		StartupStep enhanceConfigClasses = this.applicationStartup.start("spring.context.config-classes.enhance");

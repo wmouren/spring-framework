@@ -134,9 +134,15 @@ class ConfigurationClassBeanDefinitionReader {
 	 * Read a particular {@link ConfigurationClass}, registering bean definitions
 	 * for the class itself and all of its {@link Bean} methods.
 	 */
+	/**
+	 * 向容器中注册 beanDefinitions，注册本身以及类中 @Bean 方法、importResource、ImportBeanDefinitionRegistrar
+	 */
 	private void loadBeanDefinitionsForConfigurationClass(
 			ConfigurationClass configClass, TrackedConditionEvaluator trackedConditionEvaluator) {
 
+		/**
+		 * 判断是否跳过此类  Evaluate @Conditional annotations
+		 */
 		if (trackedConditionEvaluator.shouldSkip(configClass)) {
 			String beanName = configClass.getBeanName();
 			if (StringUtils.hasLength(beanName) && this.registry.containsBeanDefinition(beanName)) {
@@ -146,9 +152,15 @@ class ConfigurationClassBeanDefinitionReader {
 			return;
 		}
 
+		/**
+		 * 是否是导入过来的类 @Import 导入的，如果是导入的则注册类本身
+		 */
 		if (configClass.isImported()) {
 			registerBeanDefinitionForImportedConfigurationClass(configClass);
 		}
+		/**
+		 * 注册 @Bean 标注的 BeanDefinition
+		 */
 		for (BeanMethod beanMethod : configClass.getBeanMethods()) {
 			loadBeanDefinitionsForBeanMethod(beanMethod);
 		}
@@ -159,6 +171,7 @@ class ConfigurationClassBeanDefinitionReader {
 
 	/**
 	 * Register the {@link Configuration} class itself as a bean definition.
+	 * 导入过来的类也注册为 AnnotatedGenericBeanDefinition 类型的 beanDefinition.
 	 */
 	private void registerBeanDefinitionForImportedConfigurationClass(ConfigurationClass configClass) {
 		AnnotationMetadata metadata = configClass.getMetadata();
@@ -220,9 +233,16 @@ class ConfigurationClassBeanDefinitionReader {
 			return;
 		}
 
+		/**
+		 * 标记 @Bean 的方法会注册为 ConfigurationClassBeanDefinition 类型
+		 * 只有从配置类中解析出的 bean 会构建为 ConfigurationClassBeanDefinition 类型的 BeanDefinition
+		 */
 		ConfigurationClassBeanDefinition beanDef = new ConfigurationClassBeanDefinition(configClass, metadata, beanName);
 		beanDef.setSource(this.sourceExtractor.extractSource(metadata, configClass.getResource()));
 
+		/**
+		 * @bean 支持静态方法
+		 */
 		if (metadata.isStatic()) {
 			// static @Bean method
 			if (configClass.getMetadata() instanceof StandardAnnotationMetadata) {

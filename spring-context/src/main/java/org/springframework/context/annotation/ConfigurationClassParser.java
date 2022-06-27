@@ -291,6 +291,7 @@ class ConfigurationClassParser {
 		if (configClass.getMetadata().isAnnotated(Component.class.getName())) {
 			// Recursively process any member (nested) classes first
 			/**
+			 * 内部类优先级高于宿主类
 			 * 解析内部类
 			 * 如果内部类是配置类，则递归解析
 			 * 如果内部类不是配置类，则跳过
@@ -724,6 +725,11 @@ class ConfigurationClassParser {
 					else {
 						// Candidate class not an ImportSelector or ImportBeanDefinitionRegistrar ->
 						// process it as an @Configuration class
+						/**
+						 * ImportAware
+						 * ImportRegistry 注册 imports
+						 * key 是被 Import 的类名，value 是标注 @Import 的元信息
+						 */
 						this.importStack.registerImport(
 								currentSourceClass.getMetadata(), candidate.getMetadata().getClassName());
 						processConfigurationClass(candidate.asConfigClass(configClass), exclusionFilter);
@@ -827,6 +833,9 @@ class ConfigurationClassParser {
 
 
 	@SuppressWarnings("serial")
+	/**
+	 * ImportRegistry 实现，存储的标记 @Import 的类元信息和被 @Import 导入的配置类名称
+	 */
 	private static class ImportStack extends ArrayDeque<ConfigurationClass> implements ImportRegistry {
 
 		private final MultiValueMap<String, AnnotationMetadata> imports = new LinkedMultiValueMap<>();

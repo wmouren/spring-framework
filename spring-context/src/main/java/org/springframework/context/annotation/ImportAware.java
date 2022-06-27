@@ -28,6 +28,15 @@ import org.springframework.core.type.AnnotationMetadata;
  * @author Chris Beams
  * @since 3.1
  */
+
+/**
+ * setImportMetadata（importMetadata） importMetadata 参数是导入配置类的元信息
+ * 例：App 类使用 @Import 导入了一个配置类 A,然后 A 实现了 ImportAware 接口，那么
+ * importMetadata 参数就是 App 的元信息
+ *
+ * @See ImportAwareBeanPostProcessor#postProcessBeforeInitialization
+ * @See ConfigurationClassParser#processImports
+ */
 public interface ImportAware extends Aware {
 
 	/**
