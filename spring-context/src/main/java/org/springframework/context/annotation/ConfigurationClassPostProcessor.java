@@ -465,6 +465,11 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 	public void enhanceConfigurationClasses(ConfigurableListableBeanFactory beanFactory) {
 		StartupStep enhanceConfigClasses = this.applicationStartup.start("spring.context.config-classes.enhance");
 		Map<String, AbstractBeanDefinition> configBeanDefs = new LinkedHashMap<>();
+		/**
+		 * 取出所有 getBeanDefinitionNames 循环
+		 * 筛选出符合规则的配置类并存储到 configBeanDefs
+		 * 规则 ：BeanDefinition 的 CONFIGURATION_CLASS_ATTRIBUTE 属性值为 CONFIGURATION_CLASS_FULL
+		 */
 		for (String beanName : beanFactory.getBeanDefinitionNames()) {
 			BeanDefinition beanDef = beanFactory.getBeanDefinition(beanName);
 			Object configClassAttr = beanDef.getAttribute(ConfigurationClassUtils.CONFIGURATION_CLASS_ATTRIBUTE);
@@ -476,6 +481,11 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 				methodMetadata = annotatedBeanDefinition.getFactoryMethodMetadata();
 			}
 			if ((configClassAttr != null || methodMetadata != null) && beanDef instanceof AbstractBeanDefinition) {
+				/**
+				 * 提前加载 BeanDefinition 的 BeanClass ，使用 Class.forName
+				 * 如果是 lite 配置类或者普通组件类没有 @Bean 方法则不会提前加载 BeanClass
+				 *
+				 */
 				// Configuration class (full or lite) or a configuration-derived @Bean method
 				// -> eagerly resolve bean class at this point, unless it's a 'lite' configuration
 				// or component class without @Bean methods.
@@ -495,6 +505,11 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 					}
 				}
 			}
+			/**
+			 * 符合规则加入到 configBeanDefs 集合中
+			 * key：beanName
+			 * val：BeanDefinition
+			 */
 			if (ConfigurationClassUtils.CONFIGURATION_CLASS_FULL.equals(configClassAttr)) {
 				if (!(beanDef instanceof AbstractBeanDefinition)) {
 					throw new BeanDefinitionStoreException("Cannot enhance @Configuration bean definition '" +
@@ -515,15 +530,22 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 			return;
 		}
 
+		/**
+		 * 封装了代理增强配置类的类 ConfigurationClassEnhancer
+		 */
 		ConfigurationClassEnhancer enhancer = new ConfigurationClassEnhancer();
 		for (Map.Entry<String, AbstractBeanDefinition> entry : configBeanDefs.entrySet()) {
 			AbstractBeanDefinition beanDef = entry.getValue();
 			// If a @Configuration class gets proxied, always proxy the target class
+			/**
+			 * 设置一个属性 PRESERVE_TARGET_CLASS_ATTRIBUTE = True
+			 * 代表如果后续 AOP 代理应该代理目标配置类，而不是代理被代理过的配置类
+			 */
 			beanDef.setAttribute(AutoProxyUtils.PRESERVE_TARGET_CLASS_ATTRIBUTE, Boolean.TRUE);
 			// Set enhanced subclass of the user-specified bean class
 			Class<?> configClass = beanDef.getBeanClass();
 			/**
-			 * 增强配置类
+			 * 增强后的配置类
 			 */
 			Class<?> enhancedClass = enhancer.enhance(configClass, this.beanClassLoader);
 			if (configClass != enhancedClass) {

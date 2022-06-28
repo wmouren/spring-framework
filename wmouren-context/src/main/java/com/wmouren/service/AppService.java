@@ -20,16 +20,28 @@ import javax.annotation.PostConstruct;
  * @date 2021/3/18
  * @describe
  */
-//@Configuration
-@Component
+@Configuration
+//@Component
 public class AppService {
 
 //	@Autowired
 	private A a;
 
-	@PostConstruct
+//	@PostConstruct
 	public void t(){
 		System.out.println("============"+a);
+	}
+
+	@Bean
+	public A a(){
+		System.out.println("A=======");
+		return new A();
+	}
+
+	@Bean
+	public B b(){
+		a();
+		return new B();
 	}
 
 }
