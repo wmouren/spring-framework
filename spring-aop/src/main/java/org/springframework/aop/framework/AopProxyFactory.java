@@ -40,6 +40,17 @@ package org.springframework.aop.framework;
  *
  * @author Rod Johnson
  * @author Juergen Hoeller
+ *
+ */
+
+/**
+ * AOP 代理工厂方法
+ * 默认工厂实现 DefaultAopProxyFactory
+ *
+ * 根据 AdvisedSupport 配置来生产对应的 AopProxy 代理类，AopProxy 实现类有：
+ * CglibAopProxy
+ * JdkDynamicAopProxy
+ * ObjenesisCglibAopProxy
  */
 public interface AopProxyFactory {
 

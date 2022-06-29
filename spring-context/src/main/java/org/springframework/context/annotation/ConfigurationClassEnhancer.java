@@ -73,23 +73,38 @@ import org.springframework.util.ReflectionUtils;
 
 /**
  * 增强配置类
+ * 做什么 代理增加
+ * 怎么做 Callback
+ * 对谁做 ConditionalCallbackFilter
  */
 class ConfigurationClassEnhancer {
 
 	// The callbacks to use. Note that these callbacks must be stateless.
+	/**
+	 * 对拦截的方法进行增强
+	 */
 	private static final Callback[] CALLBACKS = new Callback[] {
 			new BeanMethodInterceptor(),
 			new BeanFactoryAwareMethodInterceptor(),
 			NoOp.INSTANCE
 	};
 
+	/**
+	 * 用来匹配要拦截的方法 对谁做
+	 */
 	private static final ConditionalCallbackFilter CALLBACK_FILTER = new ConditionalCallbackFilter(CALLBACKS);
 
+	/**
+	 * 增强类中设置一个名为 $$beanFactory 的属性
+	 */
 	private static final String BEAN_FACTORY_FIELD = "$$beanFactory";
 
 
 	private static final Log logger = LogFactory.getLog(ConfigurationClassEnhancer.class);
 
+	/**
+	 * 用来实例化一个 Class 可以绕过构造方法
+	 */
 	private static final SpringObjenesis objenesis = new SpringObjenesis();
 
 
@@ -97,6 +112,9 @@ class ConfigurationClassEnhancer {
 	 * Loads the specified class and generates a CGLIB subclass of it equipped with
 	 * container-aware callbacks capable of respecting scoping and other bean semantics.
 	 * @return the enhanced subclass
+	 *
+	 * 对配置类创建一个增强类
+	 * 对于增强过的配置类会实现一个 EnhancedConfiguration 接口来标识
 	 */
 	public Class<?> enhance(Class<?> configClass, @Nullable ClassLoader classLoader) {
 		if (EnhancedConfiguration.class.isAssignableFrom(configClass)) {
@@ -121,14 +139,34 @@ class ConfigurationClassEnhancer {
 	/**
 	 * Creates a new CGLIB {@link Enhancer} instance.
 	 */
+	/**
+	 * 创建 CGLIB Enhancer 实例
+	 */
 	private Enhancer newEnhancer(Class<?> configSuperClass, @Nullable ClassLoader classLoader) {
 		Enhancer enhancer = new Enhancer();
 		enhancer.setSuperclass(configSuperClass);
+		/**
+		 * 设置标识接口，并实现了 BeanFactoryAware 接口，由 BeanFactoryAwareMethodInterceptor 来拦截注入
+		 *
+		 */
 		enhancer.setInterfaces(new Class<?>[] {EnhancedConfiguration.class});
+
 		enhancer.setUseFactory(false);
+		/**
+		 * 设置命名策略
+		 */
 		enhancer.setNamingPolicy(SpringNamingPolicy.INSTANCE);
+		/**
+		 * Class 生成策略 使用的是 ASM
+		 */
 		enhancer.setStrategy(new BeanFactoryAwareGeneratorStrategy(classLoader));
+		/**
+		 * 设置方法回调过滤器
+		 */
 		enhancer.setCallbackFilter(CALLBACK_FILTER);
+		/**
+		 * 设置回调类
+		 */
 		enhancer.setCallbackTypes(CALLBACK_FILTER.getCallbackTypes());
 		return enhancer;
 	}
@@ -138,6 +176,9 @@ class ConfigurationClassEnhancer {
 	 * ensuring that callbacks are registered for the new subclass.
 	 */
 	private Class<?> createClass(Enhancer enhancer) {
+		/**
+		 * 创建一个增强代理子类返回 设置给配置类的 BeanDefinition
+		 */
 		Class<?> subclass = enhancer.createClass();
 		// Registering callbacks statically (as opposed to thread-local)
 		// is critical for usage in an OSGi environment (SPR-5932)...
@@ -175,6 +216,9 @@ class ConfigurationClassEnhancer {
 	 * A {@link CallbackFilter} that works by interrogating {@link Callback Callbacks} in the order
 	 * that they are defined via {@link ConditionalCallback}.
 	 */
+	/**
+	 * 判断方法使用哪个回调类处理
+	 */
 	private static class ConditionalCallbackFilter implements CallbackFilter {
 
 		private final Callback[] callbacks;
@@ -211,6 +255,9 @@ class ConfigurationClassEnhancer {
 	 * Also exposes the application ClassLoader as thread context ClassLoader for the time of
 	 * class generation (in order for ASM to pick it up when doing common superclass resolution).
 	 */
+	/**
+	 * 自定义扩展的类生成策略 ，增加了一个 BeanFactory 类型的 BEAN_FACTORY_FIELD 字段
+	 */
 	private static class BeanFactoryAwareGeneratorStrategy extends
 			ClassLoaderAwareGeneratorStrategy {
 
@@ -237,6 +284,9 @@ class ConfigurationClassEnhancer {
 	 * Intercepts the invocation of any {@link BeanFactoryAware#setBeanFactory(BeanFactory)} on
 	 * {@code @Configuration} class instances for the purpose of recording the {@link BeanFactory}.
 	 * @see EnhancedConfiguration
+	 */
+	/**
+	 * 用来处理 setBeanFactory 方法注入并设置给 BEAN_FACTORY_FIELD 字段值
 	 */
 	private static class BeanFactoryAwareMethodInterceptor implements MethodInterceptor, ConditionalCallback {
 
@@ -274,6 +324,9 @@ class ConfigurationClassEnhancer {
 	 * handling of bean semantics such as scoping and AOP proxying.
 	 * @see Bean
 	 * @see ConfigurationClassEnhancer
+	 */
+	/**
+	 * 用来处理所有标记 @Bean 方法，确保 Bean 的作用域（比如单例 Bean 确保方法初始化只有一次）
 	 */
 	private static class BeanMethodInterceptor implements MethodInterceptor, ConditionalCallback {
 
@@ -318,6 +371,11 @@ class ConfigurationClassEnhancer {
 				}
 			}
 
+			/**
+			 * 判断是否是调用的 @Bean 方法第一次调用会进到这个 if 中 去执行目标类的方法获取返回的对象
+			 * 如果是别的方法中调用则不会进到 if 里面
+			 * SimpleInstantiationStrategy#instantiate 实例化时会把当前需要实例化的方法存储到 currentlyInvokedFactoryMethod ThreadLocal 中用来 if 判断
+			 */
 			if (isCurrentlyInvokedFactoryMethod(beanMethod)) {
 				// The factory is calling the bean method in order to instantiate and register the bean
 				// (i.e. via a getBean() call) -> invoke the super implementation of the method to actually
@@ -335,6 +393,10 @@ class ConfigurationClassEnhancer {
 				return cglibMethodProxy.invokeSuper(enhancedConfigInstance, beanMethodArgs);
 			}
 
+			/**
+			 * 如果当前执行的是方法 A
+			 * 而方法 A 里面调用了方法 B 则走这里，这里会直接去容器中 getBean 获取 B，如果有直接返回，如果没有实例化 B 在返回 保证了单例不被破坏
+			 */
 			return resolveBeanReference(beanMethod, beanMethodArgs, beanFactory, beanName);
 		}
 

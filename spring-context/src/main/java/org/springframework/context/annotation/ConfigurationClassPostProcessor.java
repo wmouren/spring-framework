@@ -460,6 +460,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 	 */
 	/**
 	 * 使用 CGLIB 来增强配置类，防止方法互相调用而重复创建单例 bean，如果已经创建直接从容器取，没有再创建
+	 * 增加类而不是对象
 	 * @param beanFactory
 	 */
 	public void enhanceConfigurationClasses(ConfigurableListableBeanFactory beanFactory) {

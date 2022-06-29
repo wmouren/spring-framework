@@ -34,7 +34,6 @@ public class AppService {
 
 	@Bean
 	public A a(){
-		System.out.println("A=======");
 		return new A();
 	}
 

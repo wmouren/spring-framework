@@ -59,6 +59,9 @@ class ObjenesisCglibAopProxy extends CglibAopProxy {
 
 		if (objenesis.isWorthTrying()) {
 			try {
+				/**
+				 * 这里使用 SpringObjenesis 来实例化对象 可以跳过构造方法
+				 */
 				proxyInstance = objenesis.newInstance(proxyClass, enhancer.getUseCache());
 			}
 			catch (Throwable ex) {

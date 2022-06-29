@@ -32,6 +32,15 @@ import org.springframework.util.ClassUtils;
  * @author Rob Harrop
  * @since 14.03.2003
  */
+
+/**
+ * 代理工厂
+ * ProxyFactory 本身面向使用，一个功能门户 封装了复杂性，用户使用只需要传入需要代理的目标对象或者代理接口即可获取代理后的对象
+ *
+ * ProxyCreatorSupport 根据配置获取从 AopProxyFactory 工厂类中获取匹配的代理生产对象
+ * AdvisedSupport 主要存储代理配置信息和 Advisor
+ * EnableAspectJAutoProxy 配置的信息
+ */
 @SuppressWarnings("serial")
 public class ProxyFactory extends ProxyCreatorSupport {
 

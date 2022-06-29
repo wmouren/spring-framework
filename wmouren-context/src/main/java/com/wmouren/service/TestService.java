@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 //@Component
 @Aspect
-@Component
+//@Component
 public class TestService  {
 
     @Pointcut("execution(public * *(..))")
