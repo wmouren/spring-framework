@@ -49,6 +49,19 @@ import org.springframework.util.ObjectUtils;
  * @see PropertyOverrideConfigurer
  * @see PropertyPlaceholderConfigurer
  */
+
+/**
+ * property resource 读取管理配置给 Bean 的 property values
+ *
+ * PropertiesLoaderSupport 用来读取合并 Properties 属性
+ *
+ * 提供了有两种实现
+ * PropertyOverrideConfigurer 用来处理 "beanName.property=value" 这种类型值操作。
+ * 比如有一个 Bean 名称为 b 它有一个 name 的属性，b.name = "张三" ，实例化时会把 "张三" 这个值设置给 b 的 name 属性
+ *
+ * PropertyPlaceholderConfigurer 用来替换 ${...} placeholders
+ *
+ */
 public abstract class PropertyResourceConfigurer extends PropertiesLoaderSupport
 		implements BeanFactoryPostProcessor, PriorityOrdered {
 
@@ -80,6 +93,9 @@ public abstract class PropertyResourceConfigurer extends PropertiesLoaderSupport
 			Properties mergedProps = mergeProperties();
 
 			// Convert the merged properties, if necessary.
+			/**
+			 * 转换属性值 可以做加密之类
+			 */
 			convertProperties(mergedProps);
 
 			// Let the subclass process the properties.

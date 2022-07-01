@@ -95,6 +95,7 @@ import org.springframework.util.ClassUtils;
  */
 public class CustomEditorConfigurer implements BeanFactoryPostProcessor, Ordered {
 
+
 	protected final Log logger = LogFactory.getLog(getClass());
 
 	private int order = Ordered.LOWEST_PRECEDENCE;  // default: same as non-Ordered

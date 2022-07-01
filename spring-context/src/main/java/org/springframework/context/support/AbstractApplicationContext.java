@@ -244,6 +244,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * Create a new AbstractApplicationContext with no parent.
 	 */
 	public AbstractApplicationContext() {
+		// 初始化一个资源解析器 来解析路径文件资源  支持 Ant-style
 		this.resourcePatternResolver = getResourcePatternResolver();
 	}
 
@@ -526,6 +527,11 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		return this.beanFactoryPostProcessors;
 	}
 
+	/**
+	 * EventListenerMethodProcessor 中会处理 @EventListener 标记的方法构建成一个 ApplicationListener 调用此方法
+	 * 加入到容器中
+	 * @param listener the ApplicationListener to register
+	 */
 	@Override
 	public void addApplicationListener(ApplicationListener<?> listener) {
 		Assert.notNull(listener, "ApplicationListener must not be null");
@@ -614,14 +620,17 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				 * BeanFactoryPostProcessor 可以对已经注册的 BeanDefinition 做修改
 				 *
 				 *
-				 * 最重要的实现 ：ConfigurationClassPostProcessor
+				 * 最重要的实现 ：
+				 * ConfigurationClassPostProcessor
+				 * EventListenerMethodProcessor
+				 * PropertyResourceConfigurer
 				 *
 				 */
 				invokeBeanFactoryPostProcessors(beanFactory);
 
 				// Register bean processors that intercept bean creation.
 				/**
-				 * 注册 bean 后置处理器，用于 bean 创建前后的处理
+				 * 注册 bean 后置处理器，在 bean 初始化、实例化的过程中调用执行
 				 */
 				registerBeanPostProcessors(beanFactory);
 				beanPostProcess.end();
@@ -630,7 +639,8 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				initMessageSource();
 
 				/**
-				 * 初始化 ApplicationEventMulticaster
+				 * 初始化 ApplicationEventMulticaster 事件组播器
+				 * 用来存储容器中所有的监听器和发布事件
 				 *
 				 */
 				// Initialize event multicaster for this context.
@@ -645,7 +655,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 				// Check for listener beans and register them.
 				/**
-				 * 注册监听器到监听器工厂中 ApplicationEventMulticaster
+				 * 搜索容器中所有的 listener beans 注册到 ApplicationEventMulticaster 中
 				 */
 				registerListeners();
 
@@ -971,6 +981,9 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 			getApplicationEventMulticaster().addApplicationListenerBean(listenerBeanName);
 		}
 
+		/**
+		 * 注册完所有的监听器以后 再来发布早期注册的事件
+		 */
 		// Publish early application events now that we finally have a multicaster...
 		Set<ApplicationEvent> earlyEventsToProcess = this.earlyApplicationEvents;
 		this.earlyApplicationEvents = null;

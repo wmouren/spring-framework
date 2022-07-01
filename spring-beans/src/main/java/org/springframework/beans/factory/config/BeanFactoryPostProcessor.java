@@ -62,6 +62,16 @@ import org.springframework.beans.BeansException;
 
 /**
  * BeanFactoryPostProcessor#postProcessBeanFactory 阶段注册配置类 配置类不再生效
+ * BeanFactoryPostProcessor 只参与 BeanDefinition 的修改操作，不要修改 Bean 实例，会导致提前初始化，影响后续操作出现一些意想不到的问题
+ * 如果想对 bean 实例进行操作可以在 BeanPostProcessor 阶段进行
+ *
+ * 内部实现有：
+ * EventListenerMethodProcessor  处理标记 @EventListener 的方法
+ * PropertyResourceConfigurer  处理属性配置文件
+ * CustomScopeConfigurer 自定义作用域配置
+ * CustomAutowireConfigurer 自定义注入配置
+ * CustomEditorConfigurer 自定义属性修改配置
+ *
  */
 @FunctionalInterface
 public interface BeanFactoryPostProcessor {
