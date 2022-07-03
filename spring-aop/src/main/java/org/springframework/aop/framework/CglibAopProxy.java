@@ -192,6 +192,9 @@ class CglibAopProxy implements AopProxy, Serializable {
 			enhancer.setNamingPolicy(SpringNamingPolicy.INSTANCE);
 			enhancer.setStrategy(new ClassLoaderAwareGeneratorStrategy(classLoader));
 
+			/**
+			 * CGLIB 拦截执行代码主要类 Callback
+			 */
 			Callback[] callbacks = getCallbacks(rootClass);
 			Class<?>[] types = new Class<?>[callbacks.length];
 			for (int x = 0; x < types.length; x++) {
@@ -293,12 +296,23 @@ class CglibAopProxy implements AopProxy, Serializable {
 		// Choose a "straight to target" interceptor. (used for calls that are
 		// unadvised but can return this). May be required to expose the proxy.
 		Callback targetInterceptor;
+		/**
+		 * 目标对象拦截器
+		 */
 		if (exposeProxy) {
+			/**
+			 * @EnableAspectJAutoProxy(exposeProxy = true) 走这里
+			 */
 			targetInterceptor = (isStatic ?
 					new StaticUnadvisedExposedInterceptor(this.advised.getTargetSource().getTarget()) :
 					new DynamicUnadvisedExposedInterceptor(this.advised.getTargetSource()));
 		}
 		else {
+			/**
+			 * @EnableAspectJAutoProxy(exposeProxy = false) 走这里
+			 * Target 目标对象
+			 * 如果是配置类那就是被增强的配置类对象
+			 */
 			targetInterceptor = (isStatic ?
 					new StaticUnadvisedInterceptor(this.advised.getTargetSource().getTarget()) :
 					new DynamicUnadvisedInterceptor(this.advised.getTargetSource()));
@@ -309,6 +323,12 @@ class CglibAopProxy implements AopProxy, Serializable {
 		Callback targetDispatcher = (isStatic ?
 				new StaticDispatcher(this.advised.getTargetSource().getTarget()) : new SerializableNoOp());
 
+		/**
+		 * AOP 代理的执行顺序 ，首先执行 AOP-》目标类方法
+		 *
+		 * 如果目标类是配置类
+		 * AOP-》配置类代理增强对象方法-》目标方法
+		 */
 		Callback[] mainCallbacks = new Callback[] {
 				aopInterceptor,  // for normal advice
 				targetInterceptor,  // invoke target without considering advice, if optimized

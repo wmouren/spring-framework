@@ -565,6 +565,11 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 		if (instanceWrapper == null) {
 			//第二次调用 BeanPostProcessors
+			/**
+			 * 在此实例化 bean 对象，通过反射调用构造方法实例化 bean
+			 * 这里还没有走到处理循环引用的处理逻辑 如果在构造方法里存在循环引用则会抛异常
+			 * 构造方法不支持循环引用
+			 */
 			instanceWrapper = createBeanInstance(beanName, mbd, args);
 		}
 		Object bean = instanceWrapper.getWrappedInstance();
@@ -591,6 +596,11 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		// Eagerly cache singletons to be able to resolve circular references
 		// even when triggered by lifecycle interfaces like BeanFactoryAware.
+		/**
+		 * 用于检查循环依赖逻辑
+		 * mbd.isSingleton() 和 isSingletonCurrentlyInCreation(beanName) 条件恒定为 true
+		 * allowCircularReferences 只有这个属性是可变的 默认也为 true 可以通过 api 修改
+		 */
 		boolean earlySingletonExposure = (mbd.isSingleton() && this.allowCircularReferences &&
 				isSingletonCurrentlyInCreation(beanName));
 		if (earlySingletonExposure) {

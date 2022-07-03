@@ -266,7 +266,20 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		Object beanInstance;
 
 		// Eagerly check singleton cache for manually registered singletons.
+		/**
+		 * 先检查单例池中有没有手动注册的 bean ，这里有手动注册的 BeanFactory 对象实例
+		 * 可以调用 registerSingleton 来直接在 spring 容器中注册一个对象
+		 *
+		 * 从缓存池中获取 bena
+		 *
+		 */
 		Object sharedInstance = getSingleton(beanName);
+
+
+		/**
+		 * 从 FactoryBean 中获取 bean
+		 * 判断是否是 FactoryBean 实现类
+		 */
 		if (sharedInstance != null && args == null) {
 			if (logger.isTraceEnabled()) {
 				if (isSingletonCurrentlyInCreation(beanName)) {
@@ -344,6 +357,9 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				}
 
 				// Create bean instance.
+				/**
+				 * 处理单例 bean
+				 */
 				if (mbd.isSingleton()) {
 					sharedInstance = getSingleton(beanName, () -> {
 						try {
@@ -360,6 +376,9 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					beanInstance = getObjectForBeanInstance(sharedInstance, name, beanName, mbd);
 				}
 
+				/**
+				 * 处理原型 bean
+				 */
 				else if (mbd.isPrototype()) {
 					// It's a prototype -> create a new instance.
 					Object prototypeInstance = null;
@@ -374,6 +393,9 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				}
 
 				else {
+					/**
+					 * 处理其它作用域类型的 bean
+					 */
 					String scopeName = mbd.getScope();
 					if (!StringUtils.hasLength(scopeName)) {
 						throw new IllegalStateException("No scope name defined for bean ´" + beanName + "'");

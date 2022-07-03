@@ -179,7 +179,25 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	@Nullable
 	protected Object getSingleton(String beanName, boolean allowEarlyReference) {
 		// Quick check for existing instance without full singleton lock
+		/**
+		 * 思考：初始化容器时 singletonObjects 肯定为空 为什么这里还要取一下呢？
+		 * 验证 往 singletonObjects 里放值的途径不止一条除了spring容器初始化—扫描类----实例化-----put到容器
+		 * 还可以直接调用 registerSingleton 方法直接往 singletonObjects 中放入值，所以先取一次看是否存在
+		 *
+		 * 判断spring当前正准备初始化的bean有没有提前被put到容器
+		 *
+		 * 从三层缓存中获取 看是否存在
+		 *
+		 * 三层缓存其实存储的是三种不同阶段的 bean 对象，一个 bean 随着生命周期阶段不同只会存储在以下某一个容器中，不会同时存储在多个容器中
+		 * singletonObjects 存储的是完成了 spring 完整生命周期的 Bean
+		 * singletonFactories 存储的是一个对象工厂
+		 * earlySingletonObjects 存储的是从 singletonFactories 中工厂生产的早期对象
+		 *
+		 */
 		Object singletonObject = this.singletonObjects.get(beanName);
+		/**
+		 * isSingletonCurrentlyInCreation 用于循环依赖检查
+		 */
 		if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
 			singletonObject = this.earlySingletonObjects.get(beanName);
 			if (singletonObject == null && allowEarlyReference) {
@@ -224,6 +242,13 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 				if (logger.isDebugEnabled()) {
 					logger.debug("Creating shared instance of singleton bean '" + beanName + "'");
 				}
+				/**
+				 * 用于检查循环依赖逻辑
+				 * spring的循环依赖，不支持原型，
+				 * 不支持构造方法注入的bean；
+				 * 默认情况下单例bean是支持循环依赖的，但是也支持关闭，关闭的原理就是设置allowCircularReferences=false；
+				 * spring提供了api来设置这个值
+				 */
 				beforeSingletonCreation(beanName);
 				boolean newSingleton = false;
 				boolean recordSuppressedExceptions = (this.suppressedExceptions == null);
@@ -254,9 +279,16 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 					if (recordSuppressedExceptions) {
 						this.suppressedExceptions = null;
 					}
+					/**
+					 * 用于检查循环依赖逻辑
+					 */
 					afterSingletonCreation(beanName);
 				}
 				if (newSingleton) {
+					/**
+					 * 将完整生命周期 bean 加入到 singletonObjects 容器中，
+					 * 同时删除 其它两个缓存中对应 beanName 的值
+					 */
 					addSingleton(beanName, singletonObject);
 				}
 			}
