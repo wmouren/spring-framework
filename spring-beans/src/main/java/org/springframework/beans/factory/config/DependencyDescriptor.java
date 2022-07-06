@@ -49,6 +49,10 @@ import org.springframework.util.ObjectUtils;
  * @author Juergen Hoeller
  * @since 2.5
  */
+
+/**
+ * 将需要注入的依赖（字段、方法参数）封装成 DependencyDescriptor ，交给  beanFactory.resolveDependency 来进行统一处理
+ */
 @SuppressWarnings("serial")
 public class DependencyDescriptor extends InjectionPoint implements Serializable {
 

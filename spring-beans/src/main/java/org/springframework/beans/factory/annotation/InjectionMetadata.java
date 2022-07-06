@@ -43,6 +43,11 @@ import org.springframework.util.ReflectionUtils;
  * @author Juergen Hoeller
  * @since 2.5
  */
+
+/**
+ * 封装了 Class 中所有标注需要注入的字段、方法参数元信息
+ * 在 AutowiredAnnotationBeanPostProcessor、CommonAnnotationBeanPostProcessor、、PersistenceAnnotationBeanPostProcessor 中使用
+ */
 public class InjectionMetadata {
 
 	/**
@@ -162,8 +167,8 @@ public class InjectionMetadata {
 
 
 	/**
-	 * A single injected element.
-	 * 有不同的策略实现
+	 * A single injected element.、
+	 * 单个成员字段信息   有不同的实现策略来处理不同的类型
 	 * AutowiredMethodElement、AutowiredFieldElement
 	 * ResourceElement、LookupElement
 	 * PersistenceElement、WebServiceRefElement、EjbRefElement

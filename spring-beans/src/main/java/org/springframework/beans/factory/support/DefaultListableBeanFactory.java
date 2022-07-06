@@ -170,6 +170,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
 	/** Map from bean name to merged BeanDefinitionHolder. */
 	/** bean 名称和 BeanDefinitionHolder 缓存池    BeanDefinitionHolder  包含 BeanDefinition 定义和 bean 名称和别名数组*/
+	/** 用于存储 merged 的 BeanDefinition */
 	private final Map<String, BeanDefinitionHolder> mergedBeanDefinitionHolders = new ConcurrentHashMap<>(256);
 
 	/** Map of singleton and non-singleton bean names, keyed by dependency type. */
@@ -1289,6 +1290,14 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	public Object resolveDependency(DependencyDescriptor descriptor, @Nullable String requestingBeanName,
 			@Nullable Set<String> autowiredBeanNames, @Nullable TypeConverter typeConverter) throws BeansException {
 
+		/**
+		 *  初始化一个参数名称发现器
+		 *  ParameterNameDiscoverer 实现有：
+		 *  LocalVariableTableParameterNameDiscoverer 本地变量表来获取变量名称
+		 *  StandardReflectionParameterNameDiscoverer 通过反射 jdk 8 以上使用 -parameters 获取变量名称
+		 *
+		 *  DefaultParameterNameDiscoverer 用来组合所有 ParameterNameDiscoverer 实现，循环每个实现判断哪个可以解析并且返回
+		 */
 		descriptor.initParameterNameDiscovery(getParameterNameDiscoverer());
 		if (Optional.class == descriptor.getDependencyType()) {
 			return createOptionalDependency(descriptor, requestingBeanName);
@@ -1304,6 +1313,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			Object result = getAutowireCandidateResolver().getLazyResolutionProxyIfNecessary(
 					descriptor, requestingBeanName);
 			if (result == null) {
+				/**
+				 * 解析依赖关系
+				 */
 				result = doResolveDependency(descriptor, requestingBeanName, autowiredBeanNames, typeConverter);
 			}
 			return result;
@@ -1323,8 +1335,14 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
 			Class<?> type = descriptor.getDependencyType();
 			Object value = getAutowireCandidateResolver().getSuggestedValue(descriptor);
+			/**
+			 * @Value
+			 * ${..} 属性占位符
+			 * #{..} 支持表达式 SpEL
+			 */
 			if (value != null) {
 				if (value instanceof String) {
+					//#{ ${..}}
 					String strVal = resolveEmbeddedValue((String) value);
 					BeanDefinition bd = (beanName != null && containsBean(beanName) ?
 							getMergedBeanDefinition(beanName) : null);
@@ -1342,13 +1360,22 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 				}
 			}
 
+			/**
+			 * 处理注入同类型多个 bean   如：数组、集合、Map 等
+			 */
 			Object multipleBeans = resolveMultipleBeans(descriptor, beanName, autowiredBeanNames, typeConverter);
 			if (multipleBeans != null) {
 				return multipleBeans;
 			}
 
+			/**
+			 * 按类型查询需要注入得 bean，返回一个 Map ，key-》beanName；value-》bean
+			 */
 			Map<String, Object> matchingBeans = findAutowireCandidates(beanName, type, descriptor);
 			if (matchingBeans.isEmpty()) {
+				/**
+				 * 如果没有找到， @Autowired 注解得 required 属性为 true 则抛出 NoSuchBeanDefinitionException
+				 */
 				if (isRequired(descriptor)) {
 					raiseNoMatchingBeanFound(type, descriptor.getResolvableType(), descriptor);
 				}
@@ -1358,6 +1385,10 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			String autowiredBeanName;
 			Object instanceCandidate;
 
+			/**
+			 * 如果找到的依赖类型 bean 数量大于 1， 则按照属性名称从 map 中去取出一个符合的 bean
+			 * 如果没有找到匹配的 beanName 对应的 bean，并且 required 属性为 true 则抛出 NoUniqueBeanDefinitionException
+			 */
 			if (matchingBeans.size() > 1) {
 				autowiredBeanName = determineAutowireCandidate(matchingBeans, descriptor);
 				if (autowiredBeanName == null) {
@@ -1375,6 +1406,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			}
 			else {
 				// We have exactly one match.
+				/**
+				 * 如果匹配到得依赖仅有一个
+				 */
 				Map.Entry<String, Object> entry = matchingBeans.entrySet().iterator().next();
 				autowiredBeanName = entry.getKey();
 				instanceCandidate = entry.getValue();
@@ -1386,6 +1420,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			if (instanceCandidate instanceof Class) {
 				instanceCandidate = descriptor.resolveCandidate(autowiredBeanName, type, this);
 			}
+			/**
+			 * 进行一些校验 是否为空，是否类型匹配
+			 */
 			Object result = instanceCandidate;
 			if (result instanceof NullBean) {
 				if (isRequired(descriptor)) {

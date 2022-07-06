@@ -2,9 +2,13 @@ package com.wmouren;
 
 import com.wmouren.service.A;
 import org.springframework.context.annotation.*;
+import org.springframework.core.metrics.ApplicationStartup;
+import org.springframework.core.metrics.StartupStep;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StopWatch;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author wmouren

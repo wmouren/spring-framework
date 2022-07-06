@@ -441,6 +441,16 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 	}
 
 
+	/**
+	 * findAutowiringMetadata 查找标注 @Autowired  Fields 和 Methods 元信息
+	 * 先从缓存中取，缓存中取不到再进行解析然后存储到缓存中，
+	 * 判断 InjectionMetadata 元信息是否需要刷新，缓存中没有或者缓存中的 InjectionMetadata 存储的 targetClass 和当前 clazz 不同（被代理或者有合并继承），都会进行刷新（重新解析）
+	 * postProcessMergedBeanDefinition 阶段会先进行解析一次存储到缓存中
+	 * @param beanName
+	 * @param clazz
+	 * @param pvs
+	 * @return
+	 */
 	private InjectionMetadata findAutowiringMetadata(String beanName, Class<?> clazz, @Nullable PropertyValues pvs) {
 		// Fall back to class name as cache key, for backwards compatibility with custom callers.
 		String cacheKey = (StringUtils.hasLength(beanName) ? beanName : clazz.getName());
@@ -611,6 +621,9 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 	/**
 	 * Class representing injection information about an annotated field.
 	 */
+	/**]
+	 * 封装标注 @Autowired 的 Field
+	 */
 	private class AutowiredFieldElement extends InjectionMetadata.InjectedElement {
 
 		private final boolean required;
@@ -650,6 +663,9 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 
 		@Nullable
 		private Object resolveFieldValue(Field field, Object bean, @Nullable String beanName) {
+			/**
+			 * 将依赖字段信息封装成 DependencyDescriptor
+			 */
 			DependencyDescriptor desc = new DependencyDescriptor(field, this.required);
 			desc.setContainingClass(bean.getClass());
 			Set<String> autowiredBeanNames = new LinkedHashSet<>(1);
@@ -688,6 +704,9 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 
 	/**
 	 * Class representing injection information about an annotated method.
+	 */
+	/**]
+	 * 封装标注 @Autowired 的方法
 	 */
 	private class AutowiredMethodElement extends InjectionMetadata.InjectedElement {
 
