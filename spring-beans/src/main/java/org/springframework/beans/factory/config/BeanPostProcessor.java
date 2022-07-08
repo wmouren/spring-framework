@@ -55,6 +55,12 @@ import org.springframework.lang.Nullable;
  * @see ConfigurableBeanFactory#addBeanPostProcessor
  * @see BeanFactoryPostProcessor
  */
+
+/**
+ * Bean 得实例化、初始化后置处理器
+ * 在此可以完成属性注入、bean 的实例化、AOP、Aware 接口的调用、初始化方法和销毁方法的调用
+ * 可以实现 PriorityOrdered、Ordered 接口来指定调用顺序
+ */
 public interface BeanPostProcessor {
 
 	/**

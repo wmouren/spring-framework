@@ -136,8 +136,17 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 
 	private final Map<Object, Object> earlyProxyReferences = new ConcurrentHashMap<>(16);
 
+	/**
+	 *
+	 * key 为 BeanName 或者 BeanClass
+	 * value 为代理以后的 class
+	 */
 	private final Map<Object, Class<?>> proxyTypes = new ConcurrentHashMap<>(16);
 
+	/**
+	 * key -》 bean 的 cacheKey，bean name 或者 bean class
+	 * value -》 true 为已经被代理， false 为不被代理
+	 */
 	private final Map<Object, Boolean> advisedBeans = new ConcurrentHashMap<>(256);
 
 

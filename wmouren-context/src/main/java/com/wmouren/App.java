@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Configuration
 @ComponentScan
-//@EnableAspectJAutoProxy
+@EnableAspectJAutoProxy
 ///@Import(A.class)
 public  class App {
 

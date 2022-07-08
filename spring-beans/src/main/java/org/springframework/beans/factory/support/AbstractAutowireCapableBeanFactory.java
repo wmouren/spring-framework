@@ -511,6 +511,12 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		try {
 			// Give BeanPostProcessors a chance to return a proxy instead of the target bean instance.
 			// 第一次 BeanPostProcessors
+			/**
+			 *
+			 * SmartInstantiationAwareBeanPostProcessor#predictBeanType
+			 * InstantiationAwareBeanPostProcessor#postProcessBeforeInstantiation
+			 * 如果返回不为空后续 Bean 后置处理器下一步只会走一个 BeanPostProcessor#postProcessAfterInitialization 然后直接返回
+ 			 */
 			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
 			if (bean != null) {
 				return bean;
@@ -522,6 +528,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		try {
+			/**
+			 * 创建 bean 实例
+			 */
 			Object beanInstance = doCreateBean(beanName, mbdToUse, args);
 			if (logger.isTraceEnabled()) {
 				logger.trace("Finished creating instance of bean '" + beanName + "'");
@@ -569,6 +578,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			 * 在此实例化 bean 对象，通过反射调用构造方法实例化 bean
 			 * 这里还没有走到处理循环引用的处理逻辑 如果在构造方法里存在循环引用则会抛异常
 			 * 构造方法不支持循环引用
+			 *
+			 * SmartInstantiationAwareBeanPostProcessor#determineCandidateConstructors
 			 */
 			instanceWrapper = createBeanInstance(beanName, mbd, args);
 		}
@@ -584,6 +595,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				try {
 					// 第三次调用 BeanPostProcessors 调用执行当前类以及所有父类得 @PostConstruct、@PreDestroy、@Autowired、@Value、@Inject
 					// 以前的合并是 xml 类型，设置父 bean 来合并，现在是基本都是注解，所以用来合并所有父类的注解
+					/**
+					 * MergedBeanDefinitionPostProcessor#postProcessMergedBeanDefinition
+					 * 添加、删除、修改 BeanDefinition 信息时会调用 MergedBeanDefinitionPostProcessor#resetBeanDefinition 方法
+					 */
 					applyMergedBeanDefinitionPostProcessors(mbd, beanType, beanName);
 				}
 				catch (Throwable ex) {
@@ -608,15 +623,26 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				logger.trace("Eagerly caching bean '" + beanName +
 						"' to allow for resolving potential circular references");
 			}
+			/**
+			 * SmartInstantiationAwareBeanPostProcessor#getEarlyBeanReference
+			 */
 			addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
 		}
 
 		// Initialize the bean instance.
 		Object exposedObject = bean;
 		try {
-			// 第四、五次调用
+			// 第四、五次调用 BeanPostProcessors
+			/**
+			 * InstantiationAwareBeanPostProcessor#postProcessAfterInstantiation、
+			 * InstantiationAwareBeanPostProcessor#postProcessProperties
+			 */
 			populateBean(beanName, mbd, instanceWrapper);
-			// 第六、七次调用
+			// 第六、七次调用 BeanPostProcessors
+			/**
+			 * BeanPostProcessor#postProcessBeforeInitialization
+			 * BeanPostProcessor#postProcessAfterInitialization
+			 */
 			exposedObject = initializeBean(beanName, exposedObject, mbd);
 		}
 		catch (Throwable ex) {

@@ -44,6 +44,12 @@ import org.springframework.lang.Nullable;
  * @see org.springframework.aop.framework.autoproxy.AbstractAutoProxyCreator#setCustomTargetSourceCreators
  * @see org.springframework.aop.framework.autoproxy.target.LazyInitTargetSourceCreator
  */
+
+/**
+ * 实例化 Bean 后置处理器，InstantiationAwareBeanPostProcessor 此接口用于框架内部使用，尽量扩展实现 BeanPostProcessor 接口或者 SmartInstantiationAwareBeanPostProcessor
+ * 作用实例化前和实例化后、或者属性注入
+ * 主要用于一些特定的 bean 实例化，比如：pooling targets、 lazily initializing targets、等等
+ */
 public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
 
 	/**
@@ -71,6 +77,12 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
 	 * @see org.springframework.beans.factory.support.AbstractBeanDefinition#getFactoryMethodName()
 	 */
 	@Nullable
+	/**
+	 * bean 实例化前调用此方法来返回一个实例，这个实例可能是代理的实例，而不是目标 bean
+	 *
+	 * 如果此方法返回的不是空，则后续的bean 后置处理器将不会执行，唯一会进行的下一步生命周期是 BeanPostProcessors#postProcessAfterInitialization
+	 * 然后会返回这个代理的实例对象
+	 */
 	default Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) throws BeansException {
 		return null;
 	}
@@ -89,6 +101,9 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
 	 * instances being invoked on this bean instance.
 	 * @throws org.springframework.beans.BeansException in case of errors
 	 * @see #postProcessBeforeInstantiation
+	 */
+	/**
+	 * 控制属性是否填充，默认为 true 进行属性填充，如果为 false 则后续的属性填充将不执行
 	 */
 	default boolean postProcessAfterInstantiation(Object bean, String beanName) throws BeansException {
 		return true;
@@ -111,6 +126,9 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
 	 * @throws org.springframework.beans.BeansException in case of errors
 	 * @since 5.1
 	 * @see #postProcessPropertyValues
+	 */
+	/**
+	 * 属性填充回调
 	 */
 	@Nullable
 	default PropertyValues postProcessProperties(PropertyValues pvs, Object bean, String beanName)
