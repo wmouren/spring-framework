@@ -588,6 +588,16 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 			 *
 			 * ApplicationContext 基于 BeanFactory 的功能，扩展一些高级功能面向用户应用
 			 *
+			 * 向内部 beanFactory 设置一些属性用来扩展
+			 *
+			 * 扫描读取 BeanDefinition 注册到内部 beanFactory 中，用来获取 bean 实例
+			 * BeanDefinition 的读取是单独实现，不作为 beanFactory 的子类来实现
+			 * 读取 xml 定义的 BeanDefinition ：XmlBeanDefinitionReader
+			 * 读取注解编程式定义的 BeanDefinition： AnnotatedBeanDefinitionReader 和 ClassPathBeanDefinitionScanner
+			 * 如果想要扩展：想要从远程或者什么地方读取自定义的 Bean 。可以实现一个读取器来进行读取解析任意形式表示的 BeanDefinition 来注册到 beanFactory 中
+			 *
+			 * BeanDefinition 存储（beanFactory）和 BeanDefinition 解析读取分开实现，可以很好的进行扩展，
+			 * 从任何地方任何形式的读取解析成一个 BeanDefinition 注册到 BeanFactory 中最终获取到一个 bean 实例
 			 */
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
@@ -609,9 +619,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				// Allows post-processing of the bean factory in context subclasses.
 				postProcessBeanFactory(beanFactory);
 
-				/**
-				 * 运行耗时时间计算
-				 */
+
 				StartupStep beanPostProcess = this.applicationStartup.start("spring.context.beans.post-process");
 				// Invoke factory processors registered as beans in the context.
 				/**

@@ -118,6 +118,22 @@ import org.springframework.util.StringUtils;
  * @see #resolveDependency
  */
 @SuppressWarnings("serial")
+/**
+ * Spring 对 ConfigurableListableBeanFactory 和 BeanDefinitionRegistry 接口的默认实现:
+ * 基于 bean 定义元数据的成熟 bean 工厂，可以通过后处理器(BeanPostProcessors)进行扩展。
+ *
+ * 先注册一些 beanDefinition 然后访问 bean 实例，
+ *
+ * Bean 定义的读取是单独实现，不是作为 bean 工厂的子类，参考：XmlBeanDefinitionReader
+ *
+ *
+ * DefaultListableBeanFactory 最基础的 IOC 工厂实现
+ *
+ * DefaultListableBeanFactory 实现没有对要使用的配置格式或任何组件注解做任何假设。保持核心功能的单纯性，不做过多的功能耦合实现。
+ * 所有这些功能都是通过扩展实现的(比如 XmlBeanDefinitionReader（读取 BeanDefinition 功能）和 AutowiredAnnotationBeanPostProcessor（处理  Autowired 注解功能） )，
+ * 将共享的 BeanDefinition 对象作为核心元数据表示进行操作。这就使得 Spring 容器可以如此灵活和可扩展。
+ *
+ */
 public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFactory
 		implements ConfigurableListableBeanFactory, BeanDefinitionRegistry, Serializable {
 

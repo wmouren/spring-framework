@@ -55,6 +55,27 @@ import org.springframework.lang.Nullable;
  * @see org.springframework.beans.factory.BeanFactory
  * @see org.springframework.core.io.ResourceLoader
  */
+
+/*
+ * 面向用户暴露的接口门面，只读的
+ * 提供了：
+ * 访问 bean factory 组件的基本方法 实现于 ListableBeanFactory
+ * 可以加载一些文件资源的能力 实现于 ResourceLoader
+ * 发布事件的能力 实现于 ApplicationEventPublisher
+ * 解析消息和支持国际化 实现于 MessageSource
+ * 发现和注册 BeanPostProcessor 和 BeanFactoryPostProcessor
+ *
+ * 提供一个方便统一的启动点，加载配置文件、触发类路径扫描、以编程方式注册 bean 定义和带注释的类，以及(从5.0开始)注册功能 bean 定义。
+ *
+ *
+ * 除了标准的生命周期，ApplicationContext 还提供了
+ * ResourceLoaderAware、
+ * ApplicationEventPublisherAware
+ * ApplicationContextAware
+ * MessageSourceAware
+ *
+ *
+ */
 public interface ApplicationContext extends EnvironmentCapable, ListableBeanFactory, HierarchicalBeanFactory,
 		MessageSource, ApplicationEventPublisher, ResourcePatternResolver {
 
