@@ -25,6 +25,11 @@ package org.springframework.core;
  * @author Sebastien Deleuze
  * @since 5.3.4
  */
+
+/**
+ * GraalVM Native Image
+ * 参考链接 https://github.com/oracle/graal/
+ */
 public abstract class NativeDetector {
 
 	// See https://github.com/oracle/graal/blob/master/sdk/src/org.graalvm.nativeimage/src/org/graalvm/nativeimage/ImageInfo.java

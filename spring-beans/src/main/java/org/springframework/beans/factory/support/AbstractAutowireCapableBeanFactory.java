@@ -177,6 +177,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		ignoreDependencyInterface(BeanNameAware.class);
 		ignoreDependencyInterface(BeanFactoryAware.class);
 		ignoreDependencyInterface(BeanClassLoaderAware.class);
+
+		/**
+		 * 一般情况下 都会使用 SimpleInstantiationStrategy
+		 */
 		if (NativeDetector.inNativeImage()) {
 			this.instantiationStrategy = new SimpleInstantiationStrategy();
 		}
@@ -216,6 +220,11 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 * names if needed (e.g. for constructor names).
 	 * <p>Default is a {@link DefaultParameterNameDiscoverer}.
 	 */
+
+	/**
+	 * 设置参数名称发现器 用来获取参数得实际名称
+	 * @param parameterNameDiscoverer
+	 */
 	public void setParameterNameDiscoverer(@Nullable ParameterNameDiscoverer parameterNameDiscoverer) {
 		this.parameterNameDiscoverer = parameterNameDiscoverer;
 	}
@@ -241,6 +250,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 * <p><b>NOTE:</b> It is generally recommended to not rely on circular references
 	 * between your beans. Refactor your application logic to have the two beans
 	 * involved delegate to a third bean that encapsulates their common logic.
+	 */
+	/**
+	 * 是否容许循环引用
+	 * @param allowCircularReferences
 	 */
 	public void setAllowCircularReferences(boolean allowCircularReferences) {
 		this.allowCircularReferences = allowCircularReferences;
@@ -598,6 +611,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					/**
 					 * MergedBeanDefinitionPostProcessor#postProcessMergedBeanDefinition
 					 * 添加、删除、修改 BeanDefinition 信息时会调用 MergedBeanDefinitionPostProcessor#resetBeanDefinition 方法
+					 * 用来合并当前类以及父类的信息  @PostConstruct、@PreDestroy、@Autowired、@Value、@Inject
 					 */
 					applyMergedBeanDefinitionPostProcessors(mbd, beanType, beanName);
 				}
@@ -1204,6 +1218,13 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 * @see #autowireConstructor
 	 * @see #instantiateBean
 	 */
+	/**
+	 * 实例化 bean
+	 * @param beanName
+	 * @param mbd
+	 * @param args
+	 * @return
+	 */
 	protected BeanWrapper createBeanInstance(String beanName, RootBeanDefinition mbd, @Nullable Object[] args) {
 		// Make sure bean class is actually resolved at this point.
 		Class<?> beanClass = resolveBeanClass(mbd, beanName);
@@ -1214,7 +1235,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		/**
-		 * 自己提供的实例化方法 会优先使用
+		 * 自己提供的实例化方法  Supplier 会优先使用
 		 */
 		Supplier<?> instanceSupplier = mbd.getInstanceSupplier();
 		if (instanceSupplier != null) {
@@ -1229,6 +1250,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		// Shortcut when re-creating the same bean...
+		/**
+		 * 判断是否已经解析过的 bean 构造方法或者 @Bean 方法，直接调用已解析的来创建
+		 */
 		boolean resolved = false;
 		boolean autowireNecessary = false;
 		if (args == null) {
@@ -1257,6 +1281,13 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		 */
 		//第二次调用 BeanPostProcessors
 		Constructor<?>[] ctors = determineConstructorsFromBeanPostProcessors(beanClass, beanName);
+		/**
+		 * 如果有合适的构造方法、
+		 * 或者注入模式是 AUTOWIRE_CONSTRUCTOR、
+		 * 或者 BeanDefinition 有设置的构造器参数、
+		 * 或者有初始化参数
+		 * 用合适的参构造器参数来实例化
+		 */
 		if (ctors != null || mbd.getResolvedAutowireMode() == AUTOWIRE_CONSTRUCTOR ||
 				mbd.hasConstructorArgumentValues() || !ObjectUtils.isEmpty(args)) {
 			// 按类型自动注入  如果上面推断出一个带参构造方法则注入
@@ -1270,6 +1301,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			return autowireConstructor(beanName, mbd, ctors, null);
 		}
 
+		/**
+		 * 使用无参构造方法来实例化 bean
+		 */
 		// No special handling: simply use no-arg constructor.
 		return instantiateBean(beanName, mbd);
 	}

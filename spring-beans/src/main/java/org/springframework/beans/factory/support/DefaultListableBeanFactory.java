@@ -175,7 +175,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
 	/** Map from dependency type to corresponding autowired value. */
 	/**
-	 * 缓存一些依赖类型通用自动注入的值
+	 * 缓存一些确定的依赖类型
 	 * 比如 ApplicationContext、Environment 等。。。
 	 */
 	private final Map<Class<?>, Object> resolvableDependencies = new ConcurrentHashMap<>(16);
