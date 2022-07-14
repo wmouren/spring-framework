@@ -32,6 +32,9 @@ import org.springframework.lang.Nullable;
  * @see TransactionAttributeSourceAdvisor
  */
 @SuppressWarnings("serial")
+/**
+ * 设置顾问和切入点 TransactionAttributeSource
+ */
 public class BeanFactoryTransactionAttributeSourceAdvisor extends AbstractBeanFactoryPointcutAdvisor {
 
 	@Nullable

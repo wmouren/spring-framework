@@ -54,6 +54,10 @@ public abstract class AbstractTransactionManagementConfiguration implements Impo
 	protected TransactionManager txManager;
 
 
+	/**
+	 * 检查是否是从 @EnableTransactionManagement 里的 @Import 导入的
+	 * @param importMetadata
+	 */
 	@Override
 	public void setImportMetadata(AnnotationMetadata importMetadata) {
 		this.enableTx = AnnotationAttributes.fromMap(
@@ -64,6 +68,10 @@ public abstract class AbstractTransactionManagementConfiguration implements Impo
 		}
 	}
 
+	/**
+	 * 获取事务管理器 TransactionManager
+	 * @param configurers
+	 */
 	@Autowired(required = false)
 	void setConfigurers(Collection<TransactionManagementConfigurer> configurers) {
 		if (CollectionUtils.isEmpty(configurers)) {
@@ -79,6 +87,9 @@ public abstract class AbstractTransactionManagementConfiguration implements Impo
 
 	@Bean(name = TransactionManagementConfigUtils.TRANSACTIONAL_EVENT_LISTENER_FACTORY_BEAN_NAME)
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
+	/**
+	 * 用来处理 @TransactionalEventListener
+	 */
 	public static TransactionalEventListenerFactory transactionalEventListenerFactory() {
 		return new TransactionalEventListenerFactory();
 	}

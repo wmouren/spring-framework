@@ -33,6 +33,10 @@ import org.springframework.lang.Nullable;
  * @see TransactionProxyFactoryBean#setTransactionAttributeSource
  * @see org.springframework.transaction.annotation.AnnotationTransactionAttributeSource
  */
+
+/**
+ * 事务属性源 用来判断和获取当前对象是否是需要事务代理和获取声明的事务属性 AnnotationTransactionAttributeSource
+ */
 public interface TransactionAttributeSource {
 
 	/**

@@ -38,6 +38,9 @@ import org.springframework.util.Assert;
  * @see TransactionProxyFactoryBean
  */
 @SuppressWarnings("serial")
+/**
+ * TransactionProxyFactoryBean 的 AOP 拦截顾问拦截点 Pointcut
+ */
 public class TransactionAttributeSourceAdvisor extends AbstractPointcutAdvisor {
 
 	@Nullable

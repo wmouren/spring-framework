@@ -53,6 +53,9 @@ import org.springframework.util.ClassUtils;
  * @see org.springframework.transaction.interceptor.TransactionProxyFactoryBean#setTransactionAttributeSource
  */
 @SuppressWarnings("serial")
+/**
+ * 存储记录 @Transactional 和 @TransactionAttribute 属性信息
+ */
 public class AnnotationTransactionAttributeSource extends AbstractFallbackTransactionAttributeSource
 		implements Serializable {
 
@@ -68,6 +71,11 @@ public class AnnotationTransactionAttributeSource extends AbstractFallbackTransa
 
 	private final boolean publicMethodsOnly;
 
+	/**
+	 * 解析事务属性信息，包装成 TransactionAttribute
+	 * TransactionAttribute 是 TransactionDefinition 得子类
+	 * TransactionAnnotationParser 不同实现解析对应得事务注解属性
+	 */
 	private final Set<TransactionAnnotationParser> annotationParsers;
 
 
@@ -90,7 +98,13 @@ public class AnnotationTransactionAttributeSource extends AbstractFallbackTransa
 	 * (typically used with AspectJ class weaving)
 	 */
 	public AnnotationTransactionAttributeSource(boolean publicMethodsOnly) {
+		/**
+		 * 如果 publicMethodsOnly 为 true 则只支持 public 的方法
+		 *
+		 * 是否支持只携带事务性注释的公共方法(通常用于基于代理的AOP)，还是也支持受保护/私有方法(通常用于AspectJ类编织)
+		 */
 		this.publicMethodsOnly = publicMethodsOnly;
+
 		if (jta12Present || ejb3Present) {
 			this.annotationParsers = new LinkedHashSet<>(4);
 			this.annotationParsers.add(new SpringTransactionAnnotationParser());

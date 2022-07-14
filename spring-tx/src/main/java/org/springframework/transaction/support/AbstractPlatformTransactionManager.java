@@ -79,6 +79,21 @@ import org.springframework.transaction.UnexpectedRollbackException;
  * @see TransactionSynchronizationManager
  * @see org.springframework.transaction.jta.JtaTransactionManager
  */
+
+
+/**
+ * spring 事务处理流程抽象基类
+ * 子类必须实现事务特定状态流程模板方法：begin, suspend, resume, commit, rollback 等
+ *
+ * 抽象平台事务管理器 提供了以下工作流程（模板方法）
+ * 确定是否存在现有事务;
+ * 应用适当的传播行为;
+ * 如有需要，暂停及恢复事务;
+ * 提交时检查仅回滚标志;
+ * 对回滚进行适当的修改(实际回滚或只设置回滚);
+ * 触发注册的同步回调(如果事务同步是活动的)。  TransactionSynchronizationManager 事务同步器
+ *
+ */
 @SuppressWarnings("serial")
 public abstract class AbstractPlatformTransactionManager implements PlatformTransactionManager, Serializable {
 

@@ -40,6 +40,10 @@ import org.springframework.util.StringUtils;
  * @author Mark Paluch
  * @since 2.5
  */
+
+/**
+ * 解析类或者方法上的 @Transactional 注解，封装成 TransactionAttribute
+ */
 @SuppressWarnings("serial")
 public class SpringTransactionAnnotationParser implements TransactionAnnotationParser, Serializable {
 

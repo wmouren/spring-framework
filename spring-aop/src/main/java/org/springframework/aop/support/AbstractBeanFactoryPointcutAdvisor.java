@@ -49,6 +49,9 @@ public abstract class AbstractBeanFactoryPointcutAdvisor extends AbstractPointcu
 	@Nullable
 	private BeanFactory beanFactory;
 
+	/**
+	 * 设置 AOP 通知 事务通知 TransactionInterceptor
+	 */
 	@Nullable
 	private transient volatile Advice advice;
 

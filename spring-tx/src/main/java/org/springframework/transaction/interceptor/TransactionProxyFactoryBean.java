@@ -112,6 +112,11 @@ import org.springframework.transaction.PlatformTransactionManager;
  * @see org.springframework.aop.framework.ProxyFactoryBean
  */
 @SuppressWarnings("serial")
+/**
+ * FactoryBean 事务代理 bean 对象  RootBeanDefinition 作为一个父类模板使用
+ *
+ * 使用 ProxyFactory 来创建一个事务得代理对象
+ */
 public class TransactionProxyFactoryBean extends AbstractSingletonProxyFactoryBean
 		implements BeanFactoryAware {
 
@@ -197,6 +202,9 @@ public class TransactionProxyFactoryBean extends AbstractSingletonProxyFactoryBe
 		}
 		else {
 			// Rely on default pointcut.
+			/**
+			 * 拦截点
+			 */
 			return new TransactionAttributeSourceAdvisor(this.transactionInterceptor);
 		}
 	}
@@ -204,6 +212,10 @@ public class TransactionProxyFactoryBean extends AbstractSingletonProxyFactoryBe
 	/**
 	 * As of 4.2, this method adds {@link TransactionalProxy} to the set of
 	 * proxy interfaces in order to avoid re-processing of transaction metadata.
+	 */
+	/**
+	 * 代理对象实现一个标记接口 TransactionalProxy 防止重复处理事务元数据
+	 * @param proxyFactory the AOP ProxyFactory about to be used
 	 */
 	@Override
 	protected void postProcessProxyFactory(ProxyFactory proxyFactory) {

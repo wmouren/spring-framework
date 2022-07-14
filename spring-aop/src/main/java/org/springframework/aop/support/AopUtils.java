@@ -307,6 +307,9 @@ public abstract class AopUtils {
 			return candidateAdvisors;
 		}
 		List<Advisor> eligibleAdvisors = new ArrayList<>();
+		/**
+		 * 先处理实现 IntroductionAdvisor 接口的实例，IntroductionAdvisor 可以直接判断当前类是否符合条件 不需要解析方法
+		 */
 		for (Advisor candidate : candidateAdvisors) {
 			if (candidate instanceof IntroductionAdvisor && canApply(candidate, clazz)) {
 				eligibleAdvisors.add(candidate);
@@ -318,6 +321,9 @@ public abstract class AopUtils {
 				// already processed
 				continue;
 			}
+			/**
+			 * 在解析普通 Advisor 需要匹配是否方法签名符合当前切点
+			 */
 			if (canApply(candidate, clazz, hasIntroductions)) {
 				eligibleAdvisors.add(candidate);
 			}

@@ -332,15 +332,26 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 	 * @return the return value of the method, if any
 	 * @throws Throwable propagated from the target invocation
 	 */
+
+	/**
+	 * 事务拦截器，整合事务管理器 TransactionManager 和事务属性 TransactionAttribute 组合工作
+	 * 协调组织事务流程管理器和实际流程数据进行工作
+	 */
 	@Nullable
 	protected Object invokeWithinTransaction(Method method, @Nullable Class<?> targetClass,
 			final InvocationCallback invocation) throws Throwable {
 
 		// If the transaction attribute is null, the method is non-transactional.
+		/**
+		 * 获取事务属性源 解析当前方法得实际事务属性参数 来获取合格得事务流程管理器
+		 */
 		TransactionAttributeSource tas = getTransactionAttributeSource();
 		final TransactionAttribute txAttr = (tas != null ? tas.getTransactionAttribute(method, targetClass) : null);
 		final TransactionManager tm = determineTransactionManager(txAttr);
 
+		/**
+		 * 如果是  ReactiveTransactionManager
+		 */
 		if (this.reactiveAdapterRegistry != null && tm instanceof ReactiveTransactionManager) {
 			boolean isSuspendingFunction = KotlinDetector.isSuspendingFunction(method);
 			boolean hasSuspendingFlowReturnType = isSuspendingFunction &&
@@ -374,11 +385,20 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 			return result;
 		}
 
+
 		PlatformTransactionManager ptm = asPlatformTransactionManager(tm);
 		final String joinpointIdentification = methodIdentification(method, targetClass, txAttr);
-
+		/**
+		 * 判断是否是回调式事务流程管理器
+		 */
 		if (txAttr == null || !(ptm instanceof CallbackPreferringPlatformTransactionManager)) {
+			/**
+			 * 普通平台事务流程管理器处理逻辑
+			 */
 			// Standard transaction demarcation with getTransaction and commit/rollback calls.
+			/**
+			 * 创建事务状态 开启事务
+			 */
 			TransactionInfo txInfo = createTransactionIfNecessary(ptm, txAttr, joinpointIdentification);
 
 			Object retVal;
@@ -388,6 +408,9 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 				retVal = invocation.proceedWithInvocation();
 			}
 			catch (Throwable ex) {
+				/**
+				 * 回滚事务
+				 */
 				// target invocation exception
 				completeTransactionAfterThrowing(txInfo, ex);
 				throw ex;
@@ -403,12 +426,18 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 					retVal = VavrDelegate.evaluateTryFailure(retVal, txAttr, status);
 				}
 			}
-
+			/**
+			 * 提交事务
+			 */
 			commitTransactionAfterReturning(txInfo);
 			return retVal;
 		}
 
 		else {
+
+			/**
+			 * 回调事务流程管理器处理逻辑
+			 */
 			Object result;
 			final ThrowableHolder throwableHolder = new ThrowableHolder();
 

@@ -41,6 +41,11 @@ import org.springframework.lang.Nullable;
  * @see org.springframework.transaction.support.DefaultTransactionDefinition
  * @see org.springframework.transaction.interceptor.TransactionAttribute
  */
+
+/**
+ * 事务定义信息
+ * 事务传播、事务隔离、是否可读、Timeout 超时、事务名称等信息
+ */
 public interface TransactionDefinition {
 
 	/**
