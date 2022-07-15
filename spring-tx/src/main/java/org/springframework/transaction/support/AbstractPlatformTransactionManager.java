@@ -128,12 +128,24 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 
 	protected transient Log logger = LogFactory.getLog(getClass());
 
+	/**
+	 * 事务同步
+	 */
 	private int transactionSynchronization = SYNCHRONIZATION_ALWAYS;
 
+	/**
+	 * 超时时间
+	 */
 	private int defaultTimeout = TransactionDefinition.TIMEOUT_DEFAULT;
 
+	/**
+	 * 容许事务嵌套
+	 */
 	private boolean nestedTransactionAllowed = false;
 
+	/**
+	 * 校验已经存在的事务
+	 */
 	private boolean validateExistingTransaction = false;
 
 	private boolean globalRollbackOnParticipationFailure = true;
@@ -352,16 +364,28 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 	 * @see #isExistingTransaction
 	 * @see #doBegin
 	 */
+	/**
+	 * 处理事务传播行为，具体事务委托给子类实现 doGetTransaction isExistingTransaction  doBegin
+	 */
 	@Override
 	public final TransactionStatus getTransaction(@Nullable TransactionDefinition definition)
 			throws TransactionException {
 
 		// Use defaults if no transaction definition given.
+		/**
+		 * 如果没有事务定义 则使用默认的事务属性
+		 */
 		TransactionDefinition def = (definition != null ? definition : TransactionDefinition.withDefaults());
 
+		/**
+		 * 委托子类实现 获取事务对象
+		 */
 		Object transaction = doGetTransaction();
 		boolean debugEnabled = logger.isDebugEnabled();
 
+		/**
+		 * 判断是否已存在一个事务，检查传播行为以了解如何执行。
+		 */
 		if (isExistingTransaction(transaction)) {
 			// Existing transaction found -> check propagation behavior to find out how to behave.
 			return handleExistingTransaction(def, transaction, debugEnabled);
@@ -372,6 +396,22 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 			throw new InvalidTimeoutException("Invalid transaction timeout", def.getTimeout());
 		}
 
+		/**
+		 * 判断检查传播行为 然后执行对应的逻辑
+		 * 事务传播行为（propagation behavior）指的就是当一个事务方法被另一个事务方法调用时，这个事务方法应该如何运行。
+		 *
+		 * 例如：methodA方法调用methodB方法时，methodB是继续在调用者methodA的事务中运行呢，还是为自己开启一个新事务运行，这就是由methodB的事务传播行为决定的。
+		 *
+		 * required / supports / mandatory / requires_new / not supported / never / nested
+		 *
+		 * PROPAGATION_REQUIRED：如果当前没有事务，就创建一个新事务，如果当前存在事务，就加入该事务，这是最常见的选择，也是Spring默认的事务传播行为。(required需要，没有新建，有加入)
+		 * PROPAGATION_SUPPORTS：支持当前事务，如果当前存在事务，就加入该事务，如果当前不存在事务，就以非事务执行。（supports支持，有则加入，没有就不管了，非事务运行）
+		 * PROPAGATION_MANDATORY：支持当前事务，如果当前存在事务，就加入该事务，如果当前不存在事务，就抛出异常。（mandatory强制性，有则加入，没有异常）
+		 * PROPAGATION_REQUIRES_NEW：创建新事务，无论当前存不存在事务，都创建新事务。（requires_new需要新的，不管有没有，直接创建新事务）
+		 * PROPAGATION_NOT_SUPPORTED：以非事务方式执行操作，如果当前存在事务，就把当前事务挂起。（not supported不支持事务，存在就挂起）
+		 * PROPAGATION_NEVER：以非事务方式执行，如果当前存在事务，则抛出异常。（never不支持事务，存在就异常）
+		 * PROPAGATION_NESTED：如果当前存在事务，则在嵌套事务内执行。如果当前没有事务，则按REQUIRED属性执行。（nested存在就在嵌套的执行，没有就找是否存在外面的事务，有则加入，没有则新建）
+		 */
 		// No existing transaction found -> check propagation behavior to find out how to proceed.
 		if (def.getPropagationBehavior() == TransactionDefinition.PROPAGATION_MANDATORY) {
 			throw new IllegalTransactionStateException(
@@ -380,14 +420,23 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 		else if (def.getPropagationBehavior() == TransactionDefinition.PROPAGATION_REQUIRED ||
 				def.getPropagationBehavior() == TransactionDefinition.PROPAGATION_REQUIRES_NEW ||
 				def.getPropagationBehavior() == TransactionDefinition.PROPAGATION_NESTED) {
+			/**
+			 * 判断是否需要挂起当前事务  新事务不需要挂起 返回为空
+			 */
 			SuspendedResourcesHolder suspendedResources = suspend(null);
 			if (debugEnabled) {
 				logger.debug("Creating new transaction with name [" + def.getName() + "]: " + def);
 			}
 			try {
+				/**
+				 * 开起事务
+				 */
 				return startTransaction(def, transaction, debugEnabled, suspendedResources);
 			}
 			catch (RuntimeException | Error ex) {
+				/**
+				 * 出现异常 恢复挂起的事务
+				 */
 				resume(null, suspendedResources);
 				throw ex;
 			}
@@ -850,6 +899,9 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 					doRollback(status);
 				}
 				else {
+					/**
+					 * 如果是嵌套事务 抛出异常则设置当前事务状态 RollbackOnly 为 true
+					 */
 					// Participating in larger transaction
 					if (status.hasTransaction()) {
 						if (status.isLocalRollbackOnly() || isGlobalRollbackOnParticipationFailure()) {

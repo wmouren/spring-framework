@@ -696,6 +696,12 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 				logger.trace("Completing transaction for [" + txInfo.getJoinpointIdentification() +
 						"] after exception: " + ex);
 			}
+			/**
+			 * 对事务指定的异常进行回滚   rollbackOn (ex instanceof RuntimeException || ex instanceof Error);
+			 *
+			 * 对 RuntimeException类型 和 ERROR类型进行回滚
+			 * 对 Exception 不会回滚
+			 */
 			if (txInfo.transactionAttribute != null && txInfo.transactionAttribute.rollbackOn(ex)) {
 				try {
 					txInfo.getTransactionManager().rollback(txInfo.getTransactionStatus());
@@ -713,6 +719,9 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 			else {
 				// We don't roll back on this exception.
 				// Will still roll back if TransactionStatus.isRollbackOnly() is true.
+				/**
+				 * 默认不回滚 除非 RollbackOnly 设置为 true
+				 */
 				try {
 					txInfo.getTransactionManager().commit(txInfo.getTransactionStatus());
 				}
