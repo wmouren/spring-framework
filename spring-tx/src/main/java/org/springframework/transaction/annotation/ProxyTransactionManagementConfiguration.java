@@ -45,7 +45,7 @@ public class ProxyTransactionManagementConfiguration extends AbstractTransaction
 			TransactionAttributeSource transactionAttributeSource, TransactionInterceptor transactionInterceptor) {
 
 		/**
-		 * 创建事务 AOP 顾问
+		 * 创建事务 AOP 顾问 切点：transactionAttributeSource 通知：transactionInterceptor
 		 */
 		BeanFactoryTransactionAttributeSourceAdvisor advisor = new BeanFactoryTransactionAttributeSourceAdvisor();
 		advisor.setTransactionAttributeSource(transactionAttributeSource);

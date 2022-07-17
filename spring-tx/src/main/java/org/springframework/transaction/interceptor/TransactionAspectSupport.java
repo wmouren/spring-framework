@@ -648,6 +648,9 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 			@Nullable TransactionAttribute txAttr, final String joinpointIdentification) {
 
 		// If no name specified, apply method identification as transaction name.
+		/**
+		 * 如果事物没有名称 则吧方法名称当作事物名称
+		 */
 		if (txAttr != null && txAttr.getName() == null) {
 			txAttr = new DelegatingTransactionAttribute(txAttr) {
 				@Override
@@ -672,6 +675,9 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 				}
 			}
 		}
+		/**
+		 * 将事物需要的所有信息封装到 TransactionInfo 中
+		 */
 		return prepareTransactionInfo(tm, txAttr, joinpointIdentification, status);
 	}
 
@@ -733,6 +739,9 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 	 * @param txInfo information about the current transaction
 	 * @param ex throwable encountered
 	 */
+	/**
+	 * 处理异常 完成事物
+	 */
 	protected void completeTransactionAfterThrowing(@Nullable TransactionInfo txInfo, Throwable ex) {
 		if (txInfo != null && txInfo.getTransactionStatus() != null) {
 			if (logger.isTraceEnabled()) {
@@ -742,7 +751,7 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 			/**
 			 * 对事务指定的异常进行回滚   rollbackOn (ex instanceof RuntimeException || ex instanceof Error);
 			 *
-			 * 对 RuntimeException类型 和 ERROR类型进行回滚
+			 * 对未检查异常 RuntimeException类型 和 ERROR类型进行回滚
 			 * 对 Exception 不会回滚
 			 */
 			if (txInfo.transactionAttribute != null && txInfo.transactionAttribute.rollbackOn(ex)) {
@@ -796,6 +805,9 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 	/**
 	 * Opaque object used to hold transaction information. Subclasses
 	 * must pass it back to methods on this class, but not see its internals.
+	 */
+	/**
+	 * 事物信息
 	 */
 	protected static final class TransactionInfo {
 
