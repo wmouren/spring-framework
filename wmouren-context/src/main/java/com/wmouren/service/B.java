@@ -2,6 +2,6 @@ package com.wmouren.service;
 
 import org.springframework.stereotype.Component;
 
-//@Component
+@Component
 public class B {
 }

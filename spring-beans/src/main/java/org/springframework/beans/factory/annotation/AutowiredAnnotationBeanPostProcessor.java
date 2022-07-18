@@ -296,6 +296,7 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 		// 重复的 beanClass 类就不需要重复解析了，
 		// 比如 Dubbo 的 serviceBean.class 代理类都是同一个 BeanClass 所以就可以不用重复解析
 		Constructor<?>[] candidateConstructors = this.candidateConstructorsCache.get(beanClass);
+		// 双重检查 Double-Check
 		if (candidateConstructors == null) {
 			// Fully synchronized resolution now...
 			synchronized (this.candidateConstructorsCache) {
@@ -303,6 +304,7 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 				if (candidateConstructors == null) {
 					Constructor<?>[] rawCandidates;
 					try {
+						// 获取 Class 申明的所有构造方法
 						rawCandidates = beanClass.getDeclaredConstructors();
 					}
 					catch (Throwable ex) {
@@ -313,8 +315,17 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 					List<Constructor<?>> candidates = new ArrayList<>(rawCandidates.length);
 					Constructor<?> requiredConstructor = null;
 					Constructor<?> defaultConstructor = null;
+					/**
+					 * 针对 Kotlin 类，普通 java 类则返回 null
+					 */
 					Constructor<?> primaryConstructor = BeanUtils.findPrimaryConstructor(beanClass);
 					int nonSyntheticConstructors = 0;
+					/**
+					 * 遍历所有构造器
+					 * 一个类中构造器标记 @Autowired(required = true) 只容许有一个 当有一个构造器标记了 @Autowired(required = true) 那么 candidates 中只会存在一个合格的构造器
+					 * 如果没有  @Autowired(required = true) 那么就可以存在多个 @Autowired(required = false) 的构造器
+					 * @Autowired(required = true) 和 @Autowired(required = false) 是互斥的
+					 */
 					for (Constructor<?> candidate : rawCandidates) {
 						if (!candidate.isSynthetic()) {
 							nonSyntheticConstructors++;
@@ -322,8 +333,12 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 						else if (primaryConstructor != null) {
 							continue;
 						}
+						// 查找构造方法是否标记 @Autowired 注解
 						MergedAnnotation<?> ann = findAutowiredAnnotation(candidate);
 						if (ann == null) {
+							/**
+							 * 如果是代理类 则获取被代理的目标类 获取 @Autowired  注解
+							 */
 							Class<?> userClass = ClassUtils.getUserClass(beanClass);
 							if (userClass != beanClass) {
 								try {
@@ -336,6 +351,9 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 								}
 							}
 						}
+						/**
+						 * 标记了  @Autowired 注解
+						 */
 						if (ann != null) {
 							if (requiredConstructor != null) {
 								throw new BeanCreationException(beanName,
@@ -343,6 +361,11 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 										". Found constructor with 'required' Autowired annotation already: " +
 										requiredConstructor);
 							}
+							/**
+							 * 获取  @Autowired 注解 required 是否是必须的
+							 * 如果 required 是 true 则将构造方法赋值给 requiredConstructor 变量
+							 * 然后将构造方法存储到 candidates 中进行后续的逻辑
+							 */
 							boolean required = determineRequiredStatus(ann);
 							if (required) {
 								if (!candidates.isEmpty()) {
@@ -355,12 +378,18 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 							}
 							candidates.add(candidate);
 						}
+						// 构造方法参数为空 就将当前构造方法设置给 defaultConstructor 变量
 						else if (candidate.getParameterCount() == 0) {
 							defaultConstructor = candidate;
 						}
 					}
+					// 有标记  @Autowired 注解的构造方法处理逻辑
 					if (!candidates.isEmpty()) {
 						// Add default constructor to list of optional constructors, as fallback.
+						/**
+						 * 如果没有 requiredConstructor 构造器
+						 * 如果有默认构造方法也存储到 candidates 中，最后将 candidates 中符合要求的构造方法返回
+						 */
 						if (requiredConstructor == null) {
 							if (defaultConstructor != null) {
 								candidates.add(defaultConstructor);
@@ -374,9 +403,14 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 						}
 						candidateConstructors = candidates.toArray(new Constructor<?>[0]);
 					}
+					/**
+					 * 以下处理逻辑是没有构造器标记  @Autowired 的注解
+					 */
+					// 类中声明的只有一个有参构造器
 					else if (rawCandidates.length == 1 && rawCandidates[0].getParameterCount() > 0) {
 						candidateConstructors = new Constructor<?>[] {rawCandidates[0]};
 					}
+					// primaryConstructor 以下两个都不成立 最后返回一个空构造器集合
 					else if (nonSyntheticConstructors == 2 && primaryConstructor != null &&
 							defaultConstructor != null && !primaryConstructor.equals(defaultConstructor)) {
 						candidateConstructors = new Constructor<?>[] {primaryConstructor, defaultConstructor};
@@ -385,12 +419,28 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 						candidateConstructors = new Constructor<?>[] {primaryConstructor};
 					}
 					else {
+						// 返回一个空的
 						candidateConstructors = new Constructor<?>[0];
 					}
+					/**
+					 * 加入到缓存
+					 */
 					this.candidateConstructorsCache.put(beanClass, candidateConstructors);
 				}
 			}
 		}
+		/**
+		 * 总结：
+		 * 有  @Autowired 属性的：
+		 * 1、有标记  @Autowired 注解并且 required 是 true 则返回此构造器
+		 * 2、多个 @Autowired 注解 并且 required 是 false 的，如果有默认构造方法的 则全部返回
+		 *
+		 * 没有  @Autowired 属性的：
+		 * 1、仅有一个有参构造器则直接返回
+		 * 2、没有有参构造则返回 null
+		 * 剩下的判断和 Kotlin 类有关 普通 java 类条件都不成立
+		 *
+		 */
 		return (candidateConstructors.length > 0 ? candidateConstructors : null);
 	}
 

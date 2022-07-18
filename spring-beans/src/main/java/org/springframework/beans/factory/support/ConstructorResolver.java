@@ -170,6 +170,9 @@ class ConstructorResolver {
 				}
 			}
 
+			/**
+			 * 如果只有一个默认构造函数 并且参数都为空 则直接使用构造函数实例化
+			 */
 			if (candidates.length == 1 && explicitArgs == null && !mbd.hasConstructorArgumentValues()) {
 				Constructor<?> uniqueCandidate = candidates[0];
 				if (uniqueCandidate.getParameterCount() == 0) {
@@ -184,6 +187,7 @@ class ConstructorResolver {
 			}
 
 			// Need to resolve the constructor.
+			// 判断是否需要自动注入
 			boolean autowiring = (chosenCtors != null ||
 					mbd.getResolvedAutowireMode() == AutowireCapableBeanFactory.AUTOWIRE_CONSTRUCTOR);
 			ConstructorArgumentValues resolvedValues = null;
@@ -198,6 +202,11 @@ class ConstructorResolver {
 				minNrOfArgs = resolveConstructorArguments(beanName, mbd, bw, cargs, resolvedValues);
 			}
 
+			// 构造函数排序
+			/**
+			 * 排序规则 public 修饰参数最多
+			 * 先按修饰符排序 public 然后再按参数排序（参数最多的排序最前）
+			 */
 			AutowireUtils.sortConstructors(candidates);
 			int minTypeDiffWeight = Integer.MAX_VALUE;
 			Set<Constructor<?>> ambiguousConstructors = null;
@@ -219,6 +228,9 @@ class ConstructorResolver {
 				Class<?>[] paramTypes = candidate.getParameterTypes();
 				if (resolvedValues != null) {
 					try {
+						/**
+						 * 获取构造器参数名称
+						 */
 						String[] paramNames = ConstructorPropertiesChecker.evaluate(candidate, parameterCount);
 						if (paramNames == null) {
 							ParameterNameDiscoverer pnd = this.beanFactory.getParameterNameDiscoverer();
@@ -226,6 +238,9 @@ class ConstructorResolver {
 								paramNames = pnd.getParameterNames(candidate);
 							}
 						}
+						/**
+						 * 获取构造器参数值
+						 */
 						argsHolder = createArgumentArray(beanName, mbd, resolvedValues, bw, paramTypes, paramNames,
 								getUserDeclaredConstructor(candidate), autowiring, candidates.length == 1);
 					}
@@ -249,6 +264,9 @@ class ConstructorResolver {
 					argsHolder = new ArgumentsHolder(explicitArgs);
 				}
 
+				/**
+				 * 判断权重 选出最合适的
+				 */
 				int typeDiffWeight = (mbd.isLenientConstructorResolution() ?
 						argsHolder.getTypeDifferenceWeight(paramTypes) : argsHolder.getAssignabilityWeight(paramTypes));
 				// Choose this constructor if it represents the closest match.
@@ -268,6 +286,9 @@ class ConstructorResolver {
 				}
 			}
 
+			/**
+			 * 没有找到合适的构造器或者参数 抛出异常
+			 */
 			if (constructorToUse == null) {
 				if (causes != null) {
 					UnsatisfiedDependencyException ex = causes.removeLast();
@@ -287,11 +308,16 @@ class ConstructorResolver {
 						ambiguousConstructors);
 			}
 
+			/**
+			 * 缓存已经符合条件的构造器 标识已经解析过 resolved
+			 */
 			if (explicitArgs == null && argsHolderToUse != null) {
 				argsHolderToUse.storeCache(mbd, constructorToUse);
 			}
 		}
-
+		/**
+		 * 通过解析获取最优的构造器来实例化
+		 */
 		Assert.state(argsToUse != null, "Unresolved constructor arguments");
 		bw.setBeanInstance(instantiate(beanName, mbd, constructorToUse, argsToUse));
 		return bw;
@@ -788,6 +814,9 @@ class ConstructorResolver {
 							"] - did you specify the correct bean references as arguments?");
 				}
 				try {
+					/**
+					 * 获取需要注入的参数 赋值给 ArgumentsHolder
+					 */
 					Object autowiredArgument = resolveAutowiredArgument(
 							methodParam, beanName, autowiredBeanNames, converter, fallback);
 					args.rawArguments[paramIndex] = autowiredArgument;

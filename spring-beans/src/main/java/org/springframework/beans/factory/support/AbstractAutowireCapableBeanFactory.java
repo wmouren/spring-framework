@@ -528,7 +528,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			 *
 			 * SmartInstantiationAwareBeanPostProcessor#predictBeanType
 			 * InstantiationAwareBeanPostProcessor#postProcessBeforeInstantiation
-			 * 如果返回不为空后续 Bean 后置处理器下一步只会走一个 BeanPostProcessor#postProcessAfterInitialization 然后直接返回
+			 * 如果返回不为空后续 Bean 后置处理器下一步只会走一个 BeanPostProcessor#postProcessAfterInitialization（进行代理） 然后直接返回
  			 */
 			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
 			if (bean != null) {
@@ -1274,10 +1274,16 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		// Candidate constructors for autowiring?
 		/**
-		 * 推断构造方法
-		 * 如果有多个构造方法并且都是没有注解的 返回 null
-		 * 如果只有一个无参构造方法 返回null
-		 * 如果只有一个有参构造方法 返回这个有参构造
+		 * 总结：
+		 * 有  @Autowired 属性的：
+		 * 1、有标记  @Autowired 注解并且 required 是 true 则返回此构造器
+		 * 2、多个 @Autowired 注解 并且 required 是 false 的，如果有默认构造方法的 则全部返回
+		 *
+		 * 没有  @Autowired 属性的：
+		 * 1、仅有一个有参构造器则直接返回
+		 * 2、没有有参构造则返回 null
+		 * 剩下的判断和 Kotlin 类有关 普通 java 类条件都不成立
+		 *
 		 */
 		//第二次调用 BeanPostProcessors
 		Constructor<?>[] ctors = determineConstructorsFromBeanPostProcessors(beanClass, beanName);
@@ -1286,6 +1292,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		 * 或者注入模式是 AUTOWIRE_CONSTRUCTOR、
 		 * 或者 BeanDefinition 有设置的构造器参数、
 		 * 或者有初始化参数
+		 *
 		 * 用合适的参构造器参数来实例化
 		 */
 		if (ctors != null || mbd.getResolvedAutowireMode() == AUTOWIRE_CONSTRUCTOR ||
@@ -1301,10 +1308,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			return autowireConstructor(beanName, mbd, ctors, null);
 		}
 
-		/**
-		 * 使用无参构造方法来实例化 bean
-		 */
 		// No special handling: simply use no-arg constructor.
+		/**
+		 * 使用默认构造器实例化
+		 */
 		return instantiateBean(beanName, mbd);
 	}
 
@@ -1399,8 +1406,17 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 						getAccessControlContext());
 			}
 			else {
+				/**
+				 * 通过一个实例化策略来实例化 bean
+				 * SimpleInstantiationStrategy、
+				 * CglibSubclassingInstantiationStrategy
+				 */
 				beanInstance = getInstantiationStrategy().instantiate(mbd, beanName, this);
 			}
+			/**
+			 * 实例化的 bean 包装为一个 BeanWrapper 对象
+			 * 封装了对象属性访问器 属性赋值、获取等操作
+			 */
 			BeanWrapper bw = new BeanWrapperImpl(beanInstance);
 			initBeanWrapper(bw);
 			return bw;
