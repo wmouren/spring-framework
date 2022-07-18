@@ -35,6 +35,14 @@ import org.springframework.transaction.interceptor.TransactionAttribute;
  * @see Ejb3TransactionAnnotationParser
  * @see JtaTransactionAnnotationParser
  */
+
+/**
+ * 确定切入点并解析封装事物属性值
+ *
+ * isCandidateClass（） 判断是否是切入点
+ * parseTransactionAnnotation（）解析注解的事物相关属性值包装为 TransactionAttribute
+ *
+ */
 public interface TransactionAnnotationParser {
 
 	/**
