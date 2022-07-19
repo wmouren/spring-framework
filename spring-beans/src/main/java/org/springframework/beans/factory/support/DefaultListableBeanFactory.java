@@ -1338,6 +1338,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		}
 	}
 
+	/**
+	 * 解析依赖 获取依赖
+	 */
 	@Nullable
 	public Object doResolveDependency(DependencyDescriptor descriptor, @Nullable String beanName,
 			@Nullable Set<String> autowiredBeanNames, @Nullable TypeConverter typeConverter) throws BeansException {
@@ -1349,10 +1352,16 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 				return shortcut;
 			}
 
+			/**
+			 * 获取依赖类型
+			 */
 			Class<?> type = descriptor.getDependencyType();
+			/**
+			 * 获取 @Value 中的值
+			 */
 			Object value = getAutowireCandidateResolver().getSuggestedValue(descriptor);
 			/**
-			 * @Value
+			 * 解析 @Value
 			 * ${..} 属性占位符
 			 * #{..} 支持表达式 SpEL
 			 */
@@ -1602,7 +1611,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	 */
 	protected Map<String, Object> findAutowireCandidates(
 			@Nullable String beanName, Class<?> requiredType, DependencyDescriptor descriptor) {
-
+		// 通过 class 类型获取所有的 bean 名称
 		String[] candidateNames = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(
 				this, requiredType, true, descriptor.isEager());
 		Map<String, Object> result = CollectionUtils.newLinkedHashMap(candidateNames.length);
