@@ -222,6 +222,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	private MessageSource messageSource;
 
 	/** Helper class used in event publishing. */
+	// spring 内部事件发布器
 	@Nullable
 	private ApplicationEventMulticaster applicationEventMulticaster;
 
@@ -229,13 +230,16 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	private ApplicationStartup applicationStartup = ApplicationStartup.DEFAULT;
 
 	/** Statically specified listeners. */
+	// ApplicationListenerDetector、EventListenerMethodProcessor 会处理实现 ApplicationListener 接口和处理标记 @EventListener 注解的方法存放到此容器中
 	private final Set<ApplicationListener<?>> applicationListeners = new LinkedHashSet<>();
 
 	/** Local listeners registered before refresh. */
+	// Spring 内部早期的一些监听器
 	@Nullable
 	private Set<ApplicationListener<?>> earlyApplicationListeners;
 
 	/** ApplicationEvents published before the multicaster setup. */
+	// Spring 内部早期的一些事件 等所有的监听器注册完成则先发布早期的事件 然后将此属性赋值为 null
 	@Nullable
 	private Set<ApplicationEvent> earlyApplicationEvents;
 
