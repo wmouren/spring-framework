@@ -29,7 +29,8 @@ public  class App {
 		final A bean = context.getBean(A.class);
 //		System.out.println(bean.getI());
 		bean.getI();
-
+		Object testBean = context.getBean("&testFactoryBean");
+		System.out.println(testBean.getClass());
 	}
 
 }

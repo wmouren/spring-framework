@@ -125,13 +125,16 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		implements AutowireCapableBeanFactory {
 
 	/** Strategy for creating bean instances. */
+	// bean  实例化接口策略  负责创建 RootBeanDefinition 定义的实例。
 	private InstantiationStrategy instantiationStrategy;
 
 	/** Resolver strategy for method parameter names. */
+	// 参数名称发现者
 	@Nullable
 	private ParameterNameDiscoverer parameterNameDiscoverer = new DefaultParameterNameDiscoverer();
 
 	/** Whether to automatically try to resolve circular references between beans. */
+	// 容许循环引用
 	private boolean allowCircularReferences = true;
 
 	/**
@@ -144,12 +147,15 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 * Dependency types to ignore on dependency check and autowire, as Set of
 	 * Class objects: for example, String. Default is none.
 	 */
+	//在依赖检查和自动装配时要忽略的依赖类型，如类对象的集合:例如，String。默认是没有的。
 	private final Set<Class<?>> ignoredDependencyTypes = new HashSet<>();
+
 
 	/**
 	 * Dependency interfaces to ignore on dependency check and autowire, as Set of
 	 * Class objects. By default, only the BeanFactory interface is ignored.
 	 */
+	//忽略依赖检查和自动装配的接口
 	private final Set<Class<?>> ignoredDependencyInterfaces = new HashSet<>();
 
 	/**

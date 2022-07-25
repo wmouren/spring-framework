@@ -57,6 +57,11 @@ public abstract class BeanFactoryUtils {
 	 * @since 5.1
 	 * @see BeanFactory#FACTORY_BEAN_PREFIX
 	 */
+	/**
+	 * 工厂 Bean name 和生产的 bean name 映射
+	 * FactoryBean 和 @Bean 方法名称都会存储到这里来映射
+	 * &beanName -> beanName
+	 */
 	private static final Map<String, String> transformedBeanNameCache = new ConcurrentHashMap<>();
 
 
